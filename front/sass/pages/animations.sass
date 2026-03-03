@@ -1,0 +1,41 @@
+@keyframes propellerRotate
+  from
+    transform: rotateX(0deg)
+  to
+    transform: rotateX(360deg)
+
+@keyframes airplaneWave
+  0%, 100%
+    transform: rotate(-12deg) translateY(0)
+  25%
+    transform: rotate(-12deg) translateY(-14px)
+  50%
+    transform: rotate(-12deg) translateY(0)
+  75%
+    transform: rotate(-12deg) translateY(14px)
+
+@keyframes btn-scale
+  0%, 100%
+    transform: scale(1)
+  50%
+    transform: scale(1.1)
+
+@keyframes fade-out-btn
+  0%
+    opacity: 1
+    transform: translateY(0)
+  100%
+    opacity: 0
+      transform: translateY(20px)
+
+@keyframes anim-text-bottom
+  0%,100%
+    transform: rotate(2deg) translate(0px, 0px)
+  50%
+    transform: rotate(2deg) translate(0px, 5px)
+
+@keyframes anim-text-top
+  0%,100%
+    transform: translate(0px, 0px)
+  50%
+    transform: translate(0px, -5px)

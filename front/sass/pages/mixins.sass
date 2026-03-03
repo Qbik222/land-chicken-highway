@@ -1,0 +1,20 @@
+@mixin breakpoint($max-width: null, $min-width: null, $max-height: null, $min-height: null, $orientation: null)
+  $media-string: "screen"
+  
+  @if $max-width != null
+    $media-string: $media-string + " and (max-width: #{$max-width})"
+  
+  @if $min-width != null
+    $media-string: $media-string + " and (min-width: #{$min-width})"
+  
+  @if $max-height != null
+    $media-string: $media-string + " and (max-height: #{$max-height})"
+  
+  @if $min-height != null
+    $media-string: $media-string + " and (min-height: #{$min-height})"
+  
+  @if $orientation != null
+    $media-string: $media-string + " and (orientation: #{$orientation})"
+  
+  @media #{$media-string}
+    @content

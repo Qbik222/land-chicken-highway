@@ -1,0 +1,547 @@
+@import './vars'
+@import './mixins'
+@import './animations'
+
+.menu-test
+  position: fixed
+  left: 0
+  top: 0
+  z-index: 200
+  display: flex
+  flex-direction: column
+  gap: 8px
+  padding: 12px
+  &__buttons
+    display: flex
+    flex-direction: column
+    gap: 8px
+    &_hidden
+      display: none
+  &__btn
+    padding: 8px 12px
+    font-size: 12px
+    cursor: pointer
+    border: 1px solid #999
+    background: rgba(255, 255, 255, 0.9)
+    border-radius: 4px
+
+body
+  overscroll-behavior: none
+  -webkit-tap-highlight-color: transparent
+  background: url(../img/bg.jpg) no-repeat center center/cover
+  +breakpoint(1368px)
+    background: url(../img/bg-desc-small.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 1368px, $orientation: 'portrait')
+    background: url(../img/bg-tab.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 600px, $orientation: 'portrait')
+    background: url(../img/bg-mob.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 950px,  $max-height: 450px, $orientation: 'landscape')
+    background: url(../img/bg-desc-small.jpg) no-repeat center center/cover
+  img
+    max-width: 100%
+    height: auto
+
+.btn
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 20px
+  min-width: 225px
+  background: url(../img/btn-bg.png) no-repeat center center/cover
+  background-size: 100% 100%
+  position: relative
+  color: $black
+  font-family: $font-avory-bold
+  font-size: 18px
+  line-height: 18px
+  text-transform: uppercase
+  transition: all 0.5s ease-in-out
+  margin: 0 66px
+  border: none
+  &::before, &::after
+    content: ''
+    position: absolute
+    width: 66px
+    height: 56px
+    background: url(../img/btn-wing.png) no-repeat center center/cover
+    background-size: 100% 100%
+    transition: transform 0.4s ease-in-out
+  &::before
+    left: -5px
+    bottom: 5px
+    transform: translateX(-100%) scale(-1, 1)
+  &::after
+    right: -5px
+    bottom: 5px
+    transform: translateX(100%)
+  &:active
+    transform: scale(0.85)
+  &:hover
+    background: url(../img/btn-bg-hover.png) no-repeat center center/cover
+    background-size: 100% 100%
+    cursor: pointer
+
+.global-link
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  z-index: 9
+  opacity: 0
+  visibility: hidden
+  cursor: pointer
+  pointer-events: none
+  &._fade-in
+    visibility: visible
+    pointer-events: initial
+    
+.land
+  height: 100%
+  position: relative
+  display: flex
+  overflow: hidden
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding-top: 20px
+  background: url(../img/bg.jpg) no-repeat center center/cover
+  +breakpoint(1368px)
+    background: url(../img/bg-desc-small.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 1368px, $orientation: 'portrait')
+    background: url(../img/bg-tab.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 600px, $orientation: 'portrait')
+    background: url(../img/bg-mob.jpg) no-repeat center center/cover
+  +breakpoint($max-width: 950px,  $max-height: 450px, $orientation: 'landscape')
+    background: url(../img/bg-desc-small.jpg) no-repeat center center/cover
+  &__logo
+    position: absolute
+    top: 0
+    left: 0
+    max-width: 300px
+    z-index: 10
+
+  &__reg-btn
+    position: absolute
+    top: 32px
+    right: 23px
+    z-index: 10
+    font-family: $font-avory-semibold
+    font-size: 18px
+    text-transform: uppercase
+    color: $reg-btn-text
+    background: $greay-btn-bg
+    padding: 13px 20px 10px
+    border-radius: 6px
+    transition: background 0.3s ease-in-out, color 0.3s ease-in-out
+    &:hover
+      background: $orange
+      color: $greay-btn-bg
+      cursor: pointer
+
+  &__place-animation
+    position: relative
+    width: 750px
+    // height: 250px
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 20px
+    margin-top: auto
+    &__title
+      font-family: $font-avory-bold
+
+  &__btn
+    pointer-events: initial
+    position: relative
+    z-index: 3
+    transition: background 0.5s ease-in-out, transform 0.5s ease-in-out
+    &::before
+      transform: translateX(0) scale(-1, 1)
+      opacity: 0
+      transition: opacity 0.6s ease, transform 0.6s ease
+    &::after
+      transform: translateX(0) 
+      opacity: 0
+      transition: opacity 0.6s ease, transform 0.6s ease
+    .land__anim-layer._fade-in &::before
+      transform: translateX(-70px) scale(-1, 1)
+      opacity: 1
+    .land__anim-layer._fade-in &::after
+      transform: translateX(70px)
+      opacity: 1
+    .land__anim-layer._fade-in-btn &:hover
+      cursor: pointer
+  &__anim-layer
+    pointer-events: none
+    margin-top: 40px
+    opacity: 0
+    z-index: 4
+    transform: scale(.9)
+    animation: btn-scale 2s ease-in-out infinite
+    animation-play-state: paused
+    transition: opacity 0.6s ease, transform 0.6s ease
+    &._fade-in
+      opacity: 1
+      transform: scale(1)
+    &._fade-out
+      .land__btn
+        transition: opacity 0.3s ease, transform 0.3s ease
+        opacity: 0
+        transform: translateY(20px)
+    &._fade-in-btn
+      animation-play-state: running
+    &._btn-popup-init
+      animation-play-state: paused
+    
+  
+  &__title
+    position: relative
+    z-index: 3
+    &-your
+      font-family: $font-avory-extrabold-italic
+      font-size: 178px
+      line-height: 178px
+      text-transform: uppercase
+      transition: transform 0.4s ease, opacity 0.4s ease
+      transform: rotate(-12deg) translateX(-60px)
+      opacity: 0
+      color: $white
+      text-shadow: 0 4px 30px rgba(0, 117, 147, 0.70)
+      &._fade-in
+        transform: rotate(-12deg) translateX(0)
+        opacity: 1
+      &._fade-out
+        transform: rotate(-12deg) translateX(-60px)
+        opacity: 0
+    &-animated
+      height: 120px
+      transform: rotate(-12deg)
+      margin: -20px 0 0 0px
+      & > *
+        font-family: $font-avory-black-italic
+        color: $white
+        text-shadow: 0 4px 30px rgba(0, 117, 147, 0.70)
+        
+        text-transform: uppercase
+      &-item
+        transition: transform 0.4s ease, opacity 0.4s ease
+        opacity: 0
+        transform: translateX(-40px)
+        position: absolute
+        &._fade-in
+          transform: translateX(0)
+          opacity: 1
+        &._fade-out
+          transform: translateX(40px)
+          opacity: 0
+        &._first
+          font-size: 76px
+          margin-left: 24px
+        &._second
+          font-size: 122px
+          margin-left: 13px
+        &._third
+          font-size: 122px
+          margin-left: 15px
+  &__text
+    width: 400px
+    height: 250px
+    position: absolute
+    top: 350px
+    z-index: 4
+    // display: none
+  .anim-text-wrap
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    position: absolute
+    width: 100%
+    height: fit-content
+    left: 50%
+    top: 50%
+    transform: translate(-50%, -50%)
+  ._anim-text-top, ._anim-text-bottom
+    position: relative
+    padding: 24px 35px 39px 30px
+    width: fit-content
+    opacity: 0
+    transform: translate(60px, -40px)
+    transition: transform 0.4s ease, opacity 0.4s ease
+    opacity: 0
+    // &._fade-in
+    //   transform: translate(0,0)
+    //   opacity: 1
+    // &._fade-out
+    //   transform: translate(-60px, 40px)
+    //   opacity: 0
+    .text-span
+      display: inline-block
+      position: relative
+      z-index: 1
+      font-family: $font-avory-black-italic
+      color: $white
+      font-size: 77px
+      text-transform: uppercase
+      &__fs
+        font-size: 65px
+        line-height: 65px
+    &::before
+      content: ''
+      width: 100%
+      height: 100%
+      background: url(../img/popup/popup-text-mask.png) no-repeat center center/cover
+      background-size: 100% 100%
+      position: absolute
+      top: 0
+      left: 0
+      z-index: 0
+  ._anim-text-top
+    padding: 44px 35px 39px 30px
+    .text-span
+      transform: rotate(-12deg)
+    &::before
+      background: url(../img/popup/popup-text-mask.png) no-repeat center center/cover
+      background-size: 100% 100%
+  ._anim-text-bottom
+    padding: 44px 45px 39px 40px
+    bottom: 95px
+    transform: rotate(2deg) translate(60px, -40px)
+    align-self: flex-end
+    left: 50px
+    .text-span
+      transform: rotate(-12deg)
+    &::before
+      background: url(../img/popup/popup-text-mask-bottom.png) no-repeat center center/cover
+      background-size: 100% 100%
+    &::after
+      content: ''
+      width: 53px
+      height: 53px
+      background: url(../img/popup/plus.png) no-repeat center center/cover
+      background-size: 100% 100%
+      position: absolute
+      bottom: 40px
+      left: -15px
+      filter: drop-shadow(3px 4px 8px rgba(163, 68, 4, 0.60))
+  ._anim-text-top._fade-in
+    transform: translate(0,0)
+    opacity: 1
+  ._anim-text-top._fade-out
+    transform: translate(-60px, 40px)
+    opacity: 0
+  .anim-text-top
+    transform: translate(60px, -40px)
+    opacity: 0
+  ._anim-text-bottom._fade-in
+    transform: rotate(2deg) translate(0,0)
+    opacity: 1
+  ._anim-text-bottom._fade-out
+    transform: rotate(2deg) translate(-60px, 40px)
+    opacity: 0
+  .anim-text-bottom
+    transform: rotate(2deg) translate(60px, -40px)
+    opacity: 0
+.airplane-fly-wrap
+  transform: translateX(-200px) translateY(50px)
+  opacity: 0
+  transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out
+  &._fade-in
+    transform: none
+    opacity: 1
+    .airplane
+      // animation: none
+      animation-play-state: running
+
+.airplane-fly-scale-wrap
+  transform-origin: center center
+  transition: transform 2s ease
+
+.airplane
+  position: relative
+  z-index: 1
+  width: 750px
+  height: 300px
+  animation: airplaneWave 7.5s ease-in-out infinite
+  animation-play-state: paused
+  &__body
+    position: absolute
+    width: 100%
+    height: 100%
+    z-index: 2
+  &__propeller
+    position: absolute
+    width: 20px
+    height: 200px
+    right: 20px
+    top: 10px
+    z-index: 1
+    transform-origin: center center
+    animation: propellerRotate 0.03s linear infinite
+  &__smoke-tail
+    position: absolute
+    top: 30%
+    right: 40%
+    z-index: 3
+    border-radius: 0
+  
+
+.sky
+  z-index: 2
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  pointer-events: none
+  overflow: hidden
+
+.sky--background
+  z-index: 0
+
+.license
+  display: flex
+  align-items: center
+  gap: 8px
+  margin: auto auto 25px auto
+  flex-shrink: 0
+  position: relative
+  z-index: 10
+  &__item
+    // widths are defined responsively in media.sass
+
+.legal
+  font-family: $font-legal
+  font-size: 4.7vw
+  padding: 0 15px
+  text-align: center
+  background: $white
+
+.popup
+  position: fixed
+  width: 100%
+  height: 100%
+  top: 0
+  left: 0
+  background: rgba(0, 0, 0, 0.6)
+  z-index: 10
+  // display: none
+  opacity: 0
+  pointer-events: none
+  transition: opacity 0.4s ease-in-out
+  display: flex
+  flex-direction: column
+  align-items: center
+  padding-bottom: 70px
+  justify-content: flex-start
+  &._fade-in
+    opacity: 1
+    // pointer-events: initial
+  &._fade-out
+    opacity: 0
+    pointer-events: none
+  &__title
+    font-family: $font-avory-black-italic
+    font-size: 34px
+    text-transform: uppercase
+    color: $white
+    text-align: center
+    margin-bottom: 10px
+    opacity: 0
+    transform: rotate(-12deg) translate(80px, -10px)
+    transition: transform 0.8s ease, opacity 0.8s ease
+  &__airplane
+    width: 535px
+    height: 535px
+    min-height: 535px
+    position: relative
+    margin-bottom: -180px
+    transform: scale(.25)
+    opacity: 0
+    transition: transform 0.4s ease, opacity 0.4s ease
+    &::before
+      content: ''
+      width: 100%
+      height: 100%
+      background: url(../img/popup/light-plane.png) no-repeat center center/cover
+      background-size: 100% 100%
+      position: absolute
+      left: 0
+      top: 0
+      +breakpoint($max-width: 600px)
+        background: url(../img/popup/light-plane-mob.png) no-repeat center center/cover
+        background-size: 100% 100%
+    &-body
+      display: block
+      max-width: 440px
+      position: absolute
+      left: 0px
+      top: 160px
+    &-money-left
+      width: 184px
+      position: absolute
+      left: -120px
+      top: 130px
+    &-money-right
+      width: 100px
+      position: absolute
+      right: 12px
+      top: 120px
+    &-coin-right
+      position: absolute
+      width: 92px
+      top: 50%
+      transform: translateY(-50%)
+      right: 0
+    &-coin-left
+      width: 155px
+      position: absolute
+      left: -44px
+      bottom: 75px
+    &-coin-top
+      width: 62px
+      position: absolute
+      left: 125px
+      top: 162px
+  &__text.anim-text-wrap
+    width: fit-content
+    position: relative
+    left: auto
+    right: auto
+    top: auto
+    bottom: auto
+    transform: none
+    width: 400px
+    height: 250px
+    min-height: 250px
+    padding-top: 80px
+    ._anim-text-bottom
+      align-self: center
+      bottom: 80px
+  &__btn
+    margin-top: 45px
+    pointer-events: none
+
+  &._fade-in
+    .popup
+      &__airplane
+        transform: scale(1)
+        opacity: 1
+      &__btn
+        pointer-events: initial
+  &__title._fade-in
+    transform: rotate(-12deg)
+    opacity: 1
+  &__btn._anim-btn-scale
+    animation: btn-scale 2s ease-in-out infinite
+    animation-play-state: running
+    &:hover
+      cursor: pointer
+      animation-play-state: paused
+  &__text
+    ._anim-text-top._anim-text-popup
+      animation: anim-text-top 2s ease infinite
+    ._anim-text-bottom._anim-text-popup
+      animation: anim-text-bottom 2s ease infinite
