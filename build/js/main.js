@@ -84,7 +84,7 @@ function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, canvasHeig
   var scale = Math.max(canvasWidth / rootWidth, canvasHeight / rootHeight);
   var drawWidth = rootWidth * scale;
   var drawHeight = rootHeight * scale;
-  var x = (canvasWidth - drawWidth) / 2;
+  var x = (canvasWidth - drawWidth) / 2 - 50;
   var y = (canvasHeight - drawHeight) / 2;
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }
@@ -471,8 +471,8 @@ var chickenCanvasConfig = {
     height: 666
   }, {
     maxWidth: Infinity,
-    width: 1370,
-    height: 1120
+    width: 1470,
+    height: 700
   }],
   /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
   char: {

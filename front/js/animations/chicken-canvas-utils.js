@@ -48,7 +48,7 @@ export function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, can
   );
   const drawWidth = rootWidth * scale;
   const drawHeight = rootHeight * scale;
-  const x = (canvasWidth - drawWidth) / 2;
+  const x = ((canvasWidth - drawWidth) / 2) - 50;
   const y = (canvasHeight - drawHeight) / 2;
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }

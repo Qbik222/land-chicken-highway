@@ -22,7 +22,7 @@ export const chickenCanvasConfig = {
     { maxWidth: 600, width: 536, height: 455 },
     { maxWidth: 950, width: 868, height: 736 },
     { maxWidth: 1368, width: 1046, height: 666 },
-    { maxWidth: Infinity, width: 1370, height: 1120 },
+    { maxWidth: Infinity, width: 1470, height: 700 },
   ],
   /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
   char: {
