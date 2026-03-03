@@ -6,14 +6,16 @@
 
 ## Позиціонування
 
-- `.land__canvas` — `position: relative`, займає максимальну доступну ширину і висоту
+- `.land__canvas` — займає максимальну доступну ширину і висоту
+- Розміри `.land__canvas` задаються в **CSS** (`width: 100%`, `height: 100%`), **не через JS**
+- **Char:** по вертикалі центрується відносно `.land__canvas` (wrapperHeight); по горизонталі — offsetX від лівого краю (з breakpoints)
 
 ---
 
 ## Розміри canvas
 
 - Задаються **брейкпоінтами з конфігу** (`canvasBreakpoints` з main.js)
-- Порівняння за `viewportWidth` (`window.innerWidth`): обирається перший breakpoint, де `viewportWidth <= maxWidth`
+- послідовність пріорітету брейкпоінтів згідно порядку їх передавання в масив, більше індекс = більше пріорітет
 - Формат: `{ maxWidth, width, height }`
 
 

@@ -93,17 +93,112 @@ function sortBackgroundBreakpoints(breakpoints) {
     return b.rootWidth - a.rootWidth;
   });
 }
+
+/**
+ * Позиція char відносно land__canvas. Breakpoints sorted by maxWidth ascending;
+ * first where viewportWidth <= maxWidth applies. default: offsetX 50, centerY true.
+ * По вертикалі — центр land__canvas (wrapperHeight).
+ */
+function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl) {
+  var _charConfig$height, _wrapperEl$offsetHeig, _sorted$find, _bp$offsetX, _bp$offsetY;
+  var charHeight = (_charConfig$height = charConfig.height) !== null && _charConfig$height !== void 0 ? _charConfig$height : 228;
+  var breakpoints = charConfig.breakpoints;
+  var wrapperHeight = (_wrapperEl$offsetHeig = wrapperEl === null || wrapperEl === void 0 ? void 0 : wrapperEl.offsetHeight) !== null && _wrapperEl$offsetHeig !== void 0 ? _wrapperEl$offsetHeig : canvasHeight;
+  if (!(breakpoints !== null && breakpoints !== void 0 && breakpoints.length)) {
+    var _y = Math.max(0, Math.min((wrapperHeight - charHeight) / 2, canvasHeight - charHeight));
+    return {
+      x: 50,
+      y: _y
+    };
+  }
+  var sorted = _toConsumableArray(breakpoints).sort(function (a, b) {
+    var _a$maxWidth2, _b$maxWidth2;
+    return ((_a$maxWidth2 = a.maxWidth) !== null && _a$maxWidth2 !== void 0 ? _a$maxWidth2 : Infinity) - ((_b$maxWidth2 = b.maxWidth) !== null && _b$maxWidth2 !== void 0 ? _b$maxWidth2 : Infinity);
+  });
+  var viewportWidth = window.innerWidth;
+  var bp = (_sorted$find = sorted.find(function (p) {
+    var _p$maxWidth;
+    return viewportWidth <= ((_p$maxWidth = p.maxWidth) !== null && _p$maxWidth !== void 0 ? _p$maxWidth : Infinity);
+  })) !== null && _sorted$find !== void 0 ? _sorted$find : sorted[sorted.length - 1];
+  var offsetX = (_bp$offsetX = bp.offsetX) !== null && _bp$offsetX !== void 0 ? _bp$offsetX : 50;
+  var centerY = bp.centerY !== false;
+  var x = offsetX;
+  var y = centerY ? Math.max(0, Math.min((wrapperHeight - charHeight) / 2, canvasHeight - charHeight)) : canvasHeight - charHeight - ((_bp$offsetY = bp.offsetY) !== null && _bp$offsetY !== void 0 ? _bp$offsetY : 0);
+  return {
+    x: x,
+    y: y
+  };
+}
+function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl) {
+  var _getCharPositionForVi = getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl),
+    x = _getCharPositionForVi.x,
+    y = _getCharPositionForVi.y;
+  ctx.drawImage(charImg, x, y, charConfig.width, charConfig.height);
+}
 function createChickenCanvasController(config, elements) {
+  var _charConfig$frames2;
   var wrapperEl = elements.wrapperEl,
     canvasEl = elements.canvasEl;
   var backgroundBreakpoints = config.backgroundBreakpoints,
     _config$switchThresho = config.switchThreshold,
     switchThreshold = _config$switchThresho === void 0 ? 50 : _config$switchThresho,
-    canvasBreakpoints = config.canvasBreakpoints;
+    canvasBreakpoints = config.canvasBreakpoints,
+    charConfig = config.char;
   var bgBreakpoints = sortBackgroundBreakpoints(backgroundBreakpoints);
   var bgImage = null;
   var currentBgSrc = null;
+  var charState = 'stay';
+  var charFrameImages = [];
+  var charFrameIndex = 0;
+  var animationFrameId = null;
+  var lastCanvasWidth = 0;
+  var lastCanvasHeight = 0;
+  var lastBp = null;
+  function loadCharFrames() {
+    var _charConfig$frames;
+    if (!(charConfig !== null && charConfig !== void 0 && (_charConfig$frames = charConfig.frames) !== null && _charConfig$frames !== void 0 && _charConfig$frames.length)) return Promise.resolve();
+    return Promise.all(charConfig.frames.map(function (src) {
+      return loadImage(src).catch(function () {
+        return null;
+      });
+    })).then(function (imgs) {
+      charFrameImages = imgs.filter(Boolean);
+    });
+  }
+  function drawFullFrame() {
+    var ctx = canvasEl.getContext('2d');
+    if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
+    drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
+    if (charFrameImages.length > 0 && charConfig) {
+      var frameIdx = charState === 'stay' ? 0 : charFrameIndex % charFrameImages.length;
+      drawChar(ctx, charFrameImages[frameIdx], charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    }
+  }
+  function jumpingLoop() {
+    if (charState !== 'jumping') return;
+    charFrameIndex = (charFrameIndex + 1) % (charFrameImages.length || 1);
+    drawFullFrame();
+    animationFrameId = requestAnimationFrame(jumpingLoop);
+  }
+  function stopJumpingLoop() {
+    if (animationFrameId != null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
+  function setCharState(state) {
+    if (state === charState) return;
+    charState = state;
+    if (state === 'jumping' && charFrameImages.length > 0) {
+      charFrameIndex = 0;
+      jumpingLoop();
+    } else {
+      stopJumpingLoop();
+      drawFullFrame();
+    }
+  }
   function recalcAndRestart() {
+    stopJumpingLoop();
     var _getCanvasDimensionsF = getCanvasDimensionsFromBreakpoints(canvasBreakpoints),
       width = _getCanvasDimensionsF.width,
       height = _getCanvasDimensionsF.height;
@@ -111,35 +206,43 @@ function createChickenCanvasController(config, elements) {
     var bp = getBackgroundBreakpointForWidth(bgBreakpoints, width, switchThreshold);
     canvasEl.width = width;
     canvasEl.height = height;
-    wrapperEl.style.width = width + 'px';
-    wrapperEl.style.height = height + 'px';
+    lastCanvasWidth = width;
+    lastCanvasHeight = height;
+    lastBp = bp;
     if (bp.src !== currentBgSrc) {
       loadImage(bp.src).then(function (img) {
         bgImage = img;
         currentBgSrc = bp.src;
-        var ctx = canvasEl.getContext('2d');
-        if (ctx) {
-          var w = canvasEl.width;
-          var h = canvasEl.height;
-          if (w > 0 && h > 0) {
-            drawBackground(ctx, img, bp.rootWidth, bp.rootHeight, w, h);
-          }
+        if (charConfig && charFrameImages.length === 0) {
+          loadCharFrames().then(function () {
+            drawFullFrame();
+            if (charState === 'jumping') jumpingLoop();
+          });
+        } else {
+          drawFullFrame();
+          if (charState === 'jumping') jumpingLoop();
         }
       }).catch(function () {});
     } else if (bgImage) {
-      var ctx = canvasEl.getContext('2d');
-      if (ctx) {
-        drawBackground(ctx, bgImage, bp.rootWidth, bp.rootHeight, width, height);
-      }
+      drawFullFrame();
+      if (charState === 'jumping') jumpingLoop();
+    } else if (charConfig && charFrameImages.length === 0) {
+      loadCharFrames().then(function () {
+        return drawFullFrame();
+      });
     }
   }
   function handleInitClick() {
     wrapperEl.classList.add('_canvas-active');
     recalcAndRestart();
   }
+  if (charConfig !== null && charConfig !== void 0 && (_charConfig$frames2 = charConfig.frames) !== null && _charConfig$frames2 !== void 0 && _charConfig$frames2.length) {
+    loadCharFrames();
+  }
   return {
     recalcAndRestart: recalcAndRestart,
-    handleInitClick: handleInitClick
+    handleInitClick: handleInitClick,
+    setCharState: setCharState
   };
 }
 
@@ -160,7 +263,8 @@ function initChickenCanvas(config) {
   }
   controller.recalcAndRestart();
   return {
-    recalcAndRestart: controller.recalcAndRestart
+    recalcAndRestart: controller.recalcAndRestart,
+    setCharState: controller.setCharState
   };
 }
 
@@ -209,9 +313,26 @@ var chickenCanvasConfig = {
     height: 666
   }, {
     maxWidth: Infinity,
-    width: 1470,
-    height: 1220
-  }]};
+    width: 1370,
+    height: 1120
+  }],
+  /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
+  char: {
+    width: 160,
+    height: 228,
+    frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
+    /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
+    breakpoints: [{
+      maxWidth: 600,
+      offsetX: 30
+    }, {
+      maxWidth: 950,
+      offsetX: 50
+    }, {
+      maxWidth: Infinity,
+      offsetX: 50
+    }]
+  }};
 
 /**
  * Утиліти та бізнес-логіка сторінки.

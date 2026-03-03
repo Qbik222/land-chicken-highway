@@ -22,10 +22,33 @@ export const chickenCanvasConfig = {
     { maxWidth: 600, width: 536, height: 455 },
     { maxWidth: 950, width: 868, height: 736 },
     { maxWidth: 1368, width: 1046, height: 666 },
-    { maxWidth: Infinity, width: 1470, height: 1220 },
+    { maxWidth: Infinity, width: 1370, height: 1120 },
   ],
+  /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
+  char: {
+    width: 160,
+    height: 228,
+    frames: [
+      './img/canvas/char/frame-1.png',
+      './img/canvas/char/frame-2.png',
+      './img/canvas/char/frame-3.png',
+      './img/canvas/char/frame-4.png',
+      './img/canvas/char/frame-5.png',
+      './img/canvas/char/frame-6.png',
+      './img/canvas/char/frame-7.png',
+      './img/canvas/char/frame-8.png',
+      './img/canvas/char/frame-9.png',
+      './img/canvas/char/frame-10.png',
+    ],
+    /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
+    breakpoints: [
+      { maxWidth: 600, offsetX: 30 },
+      { maxWidth: 950, offsetX: 50 },
+      { maxWidth: Infinity, offsetX: 50 },
+    ],
+  },
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
-  override: null, // { backgroundBreakpoints: [...], switchThreshold: 50 }
+  override: null,
 };
 
 export const textAnimationConfig = {

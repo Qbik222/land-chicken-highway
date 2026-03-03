@@ -33,5 +33,8 @@ export function initChickenCanvas(config) {
 
   controller.recalcAndRestart();
 
-  return { recalcAndRestart: controller.recalcAndRestart };
+  return {
+    recalcAndRestart: controller.recalcAndRestart,
+    setCharState: controller.setCharState,
+  };
 }
