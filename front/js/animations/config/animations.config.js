@@ -24,10 +24,12 @@ export const chickenCanvasConfig = {
     { maxWidth: 1368, width: 1046, height: 666 },
     { maxWidth: Infinity, width: 1470, height: 1100 },
   ],
-  /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
+  /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
   char: {
     width: 225,
     height: 322,
+    /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
+    // sizeBreakpoints: [{ maxWidth: 600, width: 200, height: 286 }, ...],
     /** Затримка між кадрами jumping (ms) */
     jumpFrameDelay: 80,
     frames: [
@@ -98,6 +100,12 @@ export const chickenCanvasConfig = {
     ],
     fadeInFrameDelay: 60,
     items: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
+  },
+  /** Animation chain: char стрибає по дузі до коінів по черзі. */
+  animationChain: {
+    jumpArcHeight: 60,
+    jumpDuration: 600,
+    betweenJumpsDelay: 500,
   },
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
   override: null,

@@ -1,3 +1,38 @@
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    enumerableOnly && (symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    })), keys.push.apply(keys, symbols);
+  }
+  return keys;
+}
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = null != arguments[i] ? arguments[i] : {};
+    i % 2 ? ownKeys(Object(source), true).forEach(function (key) {
+      _defineProperty(target, key, source[key]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
+      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+    });
+  }
+  return target;
+}
+function _defineProperty(obj, key, value) {
+  key = _toPropertyKey(key);
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
 function _toConsumableArray(arr) {
   return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
@@ -22,6 +57,20 @@ function _arrayLikeToArray(arr, len) {
 }
 function _nonIterableSpread() {
   throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _toPrimitive(input, hint) {
+  if (typeof input !== "object" || input === null) return input;
+  var prim = input[Symbol.toPrimitive];
+  if (prim !== undefined) {
+    var res = prim.call(input, hint);
+    if (typeof res !== "object") return res;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return (hint === "string" ? String : Number)(input);
+}
+function _toPropertyKey(arg) {
+  var key = _toPrimitive(arg, "string");
+  return typeof key === "symbol" ? key : String(key);
 }
 
 /**
@@ -100,8 +149,9 @@ function sortBackgroundBreakpoints(breakpoints) {
  * По вертикалі — центр land__canvas (wrapperHeight).
  */
 function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl) {
-  var _charConfig$height, _wrapperEl$offsetHeig, _sorted$find, _bp$offsetX, _bp$offsetY;
-  var charHeight = (_charConfig$height = charConfig.height) !== null && _charConfig$height !== void 0 ? _charConfig$height : 228;
+  var _wrapperEl$offsetHeig, _sorted$find, _bp$offsetX, _bp$offsetY;
+  var _getCharSize = getCharSize(charConfig),
+    charHeight = _getCharSize.height;
   var breakpoints = charConfig.breakpoints;
   var wrapperHeight = (_wrapperEl$offsetHeig = wrapperEl === null || wrapperEl === void 0 ? void 0 : wrapperEl.offsetHeight) !== null && _wrapperEl$offsetHeig !== void 0 ? _wrapperEl$offsetHeig : canvasHeight;
   if (!(breakpoints !== null && breakpoints !== void 0 && breakpoints.length)) {
@@ -127,6 +177,27 @@ function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapp
   return {
     x: x,
     y: y
+  };
+}
+
+/**
+ * Розмір char. Дефолт 225×322. Зміни тільки через charConfig.sizeBreakpoints.
+ */
+function getCharSize(charConfig) {
+  var _charConfig$sizeBreak, _charConfig$width, _charConfig$height;
+  if (!charConfig) return {
+    width: 225,
+    height: 322
+  };
+  if ((_charConfig$sizeBreak = charConfig.sizeBreakpoints) !== null && _charConfig$sizeBreak !== void 0 && _charConfig$sizeBreak.length) {
+    return {
+      width: getValueFromBreakpoints(charConfig.sizeBreakpoints, 'width', 225),
+      height: getValueFromBreakpoints(charConfig.sizeBreakpoints, 'height', 322)
+    };
+  }
+  return {
+    width: (_charConfig$width = charConfig.width) !== null && _charConfig$width !== void 0 ? _charConfig$width : 225,
+    height: (_charConfig$height = charConfig.height) !== null && _charConfig$height !== void 0 ? _charConfig$height : 322
   };
 }
 
@@ -163,7 +234,7 @@ function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvas
   var items = (_coinsConfig$items = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) !== null && _coinsConfig$items !== void 0 ? _coinsConfig$items : [];
   var wrapperHeight = (_wrapperEl$offsetHeig2 = wrapperEl === null || wrapperEl === void 0 ? void 0 : wrapperEl.offsetHeight) !== null && _wrapperEl$offsetHeig2 !== void 0 ? _wrapperEl$offsetHeig2 : canvasHeight;
   var y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
-  var leftEdge = charX + (charWidth !== null && charWidth !== void 0 ? charWidth : 160);
+  var leftEdge = charX + (charWidth !== null && charWidth !== void 0 ? charWidth : 225);
   for (var i = 0; i <= index; i++) {
     var _items$i$gapBetweenLe, _items$i, _ref, _items$i$gapBetweenLe2, _items$i2, _items;
     var gap = i === 0 ? (_items$i$gapBetweenLe = (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _items$i$gapBetweenLe !== void 0 ? _items$i$gapBetweenLe : offsetRight : (_ref = (_items$i$gapBetweenLe2 = (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _items$i$gapBetweenLe2 !== void 0 ? _items$i$gapBetweenLe2 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref !== void 0 ? _ref : gapBetween;
@@ -224,11 +295,12 @@ function drawBarrier(ctx, img, barrierConfig, x, y) {
 function drawCoin(ctx, img, coinsConfig, x, y) {
   ctx.drawImage(img, x, y, coinsConfig.width, coinsConfig.height);
 }
-function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl) {
-  var _getCharPositionForVi = getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl),
-    x = _getCharPositionForVi.x,
-    y = _getCharPositionForVi.y;
-  ctx.drawImage(charImg, x, y, charConfig.width, charConfig.height);
+function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl, overridePosition) {
+  var _getCharSize2 = getCharSize(charConfig),
+    width = _getCharSize2.width,
+    height = _getCharSize2.height;
+  var pos = overridePosition !== null && overridePosition !== void 0 ? overridePosition : getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl);
+  ctx.drawImage(charImg, pos.x, pos.y, width, height);
 }
 function createChickenCanvasController(config, elements) {
   var _charConfig$frames2, _coinsConfig$frames4, _barrierConfig$frames5;
@@ -240,8 +312,18 @@ function createChickenCanvasController(config, elements) {
     canvasBreakpoints = config.canvasBreakpoints,
     charConfig = config.char,
     coinsConfig = config.coins,
-    barrierConfig = config.barrier;
+    barrierConfig = config.barrier,
+    animationChainConfig = config.animationChain;
   var bgBreakpoints = sortBackgroundBreakpoints(backgroundBreakpoints);
+  var charOverridePosition = null;
+  var initialCharPosition = null;
+  var chainActive = false;
+  var chainTargetCoinIndex = 0;
+  var chainStartX = 0;
+  var chainStartY = 0;
+  var chainTargetX = 0;
+  var chainStartTime = 0;
+  var chainJumpTimerId = null;
   var bgImage = null;
   var currentBgSrc = null;
   var charState = 'stay';
@@ -253,7 +335,7 @@ function createChickenCanvasController(config, elements) {
   var lastBp = null;
   var coinStates = ((coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) || []).map(function () {
     return {
-      state: 'fade-out',
+      state: 'static',
       frameIndex: 0,
       visible: true
     };
@@ -287,6 +369,79 @@ function createChickenCanvasController(config, elements) {
       coinFrameImages = imgs;
     });
   }
+  function getCoinCenterX(coinIndex) {
+    var _coinsConfig$width2;
+    var charSize = getCharSize(charConfig);
+    var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    return pos.x + ((_coinsConfig$width2 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width2 !== void 0 ? _coinsConfig$width2 : 134) / 2;
+  }
+  function getCoinCenterAsCharLeft(coinIndex) {
+    var charSize = getCharSize(charConfig);
+    var centerX = getCoinCenterX(coinIndex);
+    return centerX - charSize.width / 2;
+  }
+  function baseCharXForCoins() {
+    var _x, _ref2, _initialCharPosition;
+    return (_x = (_ref2 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref2 === void 0 ? void 0 : _ref2.x) !== null && _x !== void 0 ? _x : 50;
+  }
+  function startJumpToCoin(targetIndex) {
+    var _charOverridePosition, _currentPos$x, _currentPos$y;
+    if (targetIndex < 0 || targetIndex >= coinStates.length) return;
+    chainTargetCoinIndex = targetIndex;
+    var currentPos = (_charOverridePosition = charOverridePosition) !== null && _charOverridePosition !== void 0 ? _charOverridePosition : initialCharPosition;
+    chainStartX = (_currentPos$x = currentPos === null || currentPos === void 0 ? void 0 : currentPos.x) !== null && _currentPos$x !== void 0 ? _currentPos$x : 50;
+    chainStartY = (_currentPos$y = currentPos === null || currentPos === void 0 ? void 0 : currentPos.y) !== null && _currentPos$y !== void 0 ? _currentPos$y : 0;
+    chainTargetX = getCoinCenterAsCharLeft(targetIndex);
+    chainStartTime = performance.now();
+    setCharState('jumping');
+  }
+  function updateChainJumpPosition() {
+    var _animationChainConfig, _animationChainConfig2;
+    var jumpDuration = (_animationChainConfig = animationChainConfig === null || animationChainConfig === void 0 ? void 0 : animationChainConfig.jumpDuration) !== null && _animationChainConfig !== void 0 ? _animationChainConfig : 600;
+    var arcHeight = (_animationChainConfig2 = animationChainConfig === null || animationChainConfig === void 0 ? void 0 : animationChainConfig.jumpArcHeight) !== null && _animationChainConfig2 !== void 0 ? _animationChainConfig2 : 20;
+    var progress = Math.min(1, (performance.now() - chainStartTime) / jumpDuration);
+    if (progress >= 1) {
+      charOverridePosition = {
+        x: chainTargetX,
+        y: chainStartY
+      };
+      setCoinFadeOut(chainTargetCoinIndex);
+      setCharState('stay');
+      return false;
+    }
+    var t = progress;
+    var x = chainStartX + t * (chainTargetX - chainStartX);
+    var y = chainStartY - 4 * arcHeight * t * (1 - t);
+    charOverridePosition = {
+      x: x,
+      y: y
+    };
+    return true;
+  }
+  function scheduleNextChainJump(completedCoinIndex) {
+    var _animationChainConfig3;
+    var nextIndex = completedCoinIndex + 1;
+    var betweenDelay = (_animationChainConfig3 = animationChainConfig === null || animationChainConfig === void 0 ? void 0 : animationChainConfig.betweenJumpsDelay) !== null && _animationChainConfig3 !== void 0 ? _animationChainConfig3 : 0;
+    var schedule = function schedule() {
+      chainJumpTimerId = null;
+      if (nextIndex < coinStates.length) {
+        startJumpToCoin(nextIndex);
+      } else {
+        chainActive = false;
+      }
+    };
+    if (betweenDelay > 0) {
+      chainJumpTimerId = window.setTimeout(schedule, betweenDelay);
+    } else {
+      schedule();
+    }
+  }
+  function stopChainJumpTimer() {
+    if (chainJumpTimerId != null) {
+      clearTimeout(chainJumpTimerId);
+      chainJumpTimerId = null;
+    }
+  }
   function loadBarrierFramesTask() {
     var _barrierConfig$frames2;
     if (!(barrierConfig !== null && barrierConfig !== void 0 && (_barrierConfig$frames2 = barrierConfig.frames) !== null && _barrierConfig$frames2 !== void 0 && _barrierConfig$frames2.length)) return Promise.resolve();
@@ -295,15 +450,18 @@ function createChickenCanvasController(config, elements) {
     });
   }
   function drawFullFrame() {
+    var _x2, _ref3, _initialCharPosition2;
     var ctx = canvasEl.getContext('2d');
     if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
+    var charSize = charConfig ? getCharSize(charConfig) : {
+      width: 225};
     var charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
+    var baseCharX = (_x2 = (_ref3 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref3 === void 0 ? void 0 : _ref3.x) !== null && _x2 !== void 0 ? _x2 : 50;
     if (coinsConfig && coinFrameImages.length > 0) {
       coinStates.forEach(function (coin, index) {
-        var _charPos$x, _charConfig$width;
         if (!coin.visible) return;
-        var _getCoinPositionForVi = getCoinPositionForViewport(coinsConfig, (_charPos$x = charPos === null || charPos === void 0 ? void 0 : charPos.x) !== null && _charPos$x !== void 0 ? _charPos$x : 50, (_charConfig$width = charConfig === null || charConfig === void 0 ? void 0 : charConfig.width) !== null && _charConfig$width !== void 0 ? _charConfig$width : 160, index, lastCanvasWidth, lastCanvasHeight, wrapperEl),
+        var _getCoinPositionForVi = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl),
           x = _getCoinPositionForVi.x,
           y = _getCoinPositionForVi.y;
         var frameIdx = coin.state === 'static' ? 0 : coin.frameIndex % coinFrameImages.length;
@@ -313,10 +471,10 @@ function createChickenCanvasController(config, elements) {
     }
     if (barrierConfig && coinsConfig && barrierFrameImages.length > 0) {
       barrierStates.forEach(function (barrier, index) {
-        var _charPos$x2, _charConfig$width2, _coinsConfig$width2, _barrierConfig$static;
+        var _coinsConfig$width3, _barrierConfig$static;
         if (!barrier.visible) return;
-        var coinPos = getCoinPositionForViewport(coinsConfig, (_charPos$x2 = charPos === null || charPos === void 0 ? void 0 : charPos.x) !== null && _charPos$x2 !== void 0 ? _charPos$x2 : 50, (_charConfig$width2 = charConfig === null || charConfig === void 0 ? void 0 : charConfig.width) !== null && _charConfig$width2 !== void 0 ? _charConfig$width2 : 160, index, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-        var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width2 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width2 !== void 0 ? _coinsConfig$width2 : 134),
+        var coinPos = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+        var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width3 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width3 !== void 0 ? _coinsConfig$width3 : 134),
           x = _getBarrierPositionFo.x,
           y = _getBarrierPositionFo.y;
         var frameIdx = barrier.state === 'static' ? (_barrierConfig$static = barrierConfig.staticFrameIndex) !== null && _barrierConfig$static !== void 0 ? _barrierConfig$static : 5 : barrier.frameIndex % barrierFrameImages.length;
@@ -325,8 +483,10 @@ function createChickenCanvasController(config, elements) {
       });
     }
     if (charFrameImages.length > 0 && charConfig) {
+      var _charOverridePosition2;
       var frameIdx = charState === 'stay' ? 0 : charFrameIndex % charFrameImages.length;
-      drawChar(ctx, charFrameImages[frameIdx], charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+      var charDrawPos = (_charOverridePosition2 = charOverridePosition) !== null && _charOverridePosition2 !== void 0 ? _charOverridePosition2 : charPos;
+      drawChar(ctx, charFrameImages[frameIdx], charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl, charDrawPos);
     }
   }
   function coinFadeLoop() {
@@ -350,6 +510,9 @@ function createChickenCanvasController(config, elements) {
             var _barrierConfig$fadeIn;
             var delay = (_barrierConfig$fadeIn = barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.fadeInFrameDelay) !== null && _barrierConfig$fadeIn !== void 0 ? _barrierConfig$fadeIn : 60;
             barrierFadeInTimerId = window.setTimeout(barrierFadeInLoop, delay);
+          }
+          if (chainActive) {
+            scheduleNextChainJump(coinIndex);
           }
         }
       }
@@ -415,6 +578,10 @@ function createChickenCanvasController(config, elements) {
   function jumpingLoop() {
     var _charConfig$jumpFrame;
     if (charState !== 'jumping') return;
+    if (chainActive) {
+      var continuing = updateChainJumpPosition();
+      if (!continuing) return;
+    }
     charFrameIndex = (charFrameIndex + 1) % (charFrameImages.length || 1);
     drawFullFrame();
     var delay = (_charConfig$jumpFrame = charConfig === null || charConfig === void 0 ? void 0 : charConfig.jumpFrameDelay) !== null && _charConfig$jumpFrame !== void 0 ? _charConfig$jumpFrame : 80;
@@ -441,6 +608,10 @@ function createChickenCanvasController(config, elements) {
     stopJumpingLoop();
     stopCoinFadeLoop();
     stopBarrierFadeInLoop();
+    stopChainJumpTimer();
+    chainActive = false;
+    charOverridePosition = null;
+    initialCharPosition = null;
     var _getCanvasDimensionsF = getCanvasDimensionsFromBreakpoints(canvasBreakpoints),
       width = _getCanvasDimensionsF.width,
       height = _getCanvasDimensionsF.height;
@@ -501,6 +672,14 @@ function createChickenCanvasController(config, elements) {
     wrapperEl.classList.add('_canvas-active');
     recalcAndRestart();
   }
+  function startAnimationChain() {
+    if (!charConfig || !coinsConfig || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
+    if (coinStates.length === 0) return;
+    initialCharPosition = getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    charOverridePosition = _objectSpread2({}, initialCharPosition);
+    chainActive = true;
+    startJumpToCoin(0);
+  }
   if (charConfig !== null && charConfig !== void 0 && (_charConfig$frames2 = charConfig.frames) !== null && _charConfig$frames2 !== void 0 && _charConfig$frames2.length) {
     loadCharFrames();
   }
@@ -514,7 +693,8 @@ function createChickenCanvasController(config, elements) {
     recalcAndRestart: recalcAndRestart,
     handleInitClick: handleInitClick,
     setCharState: setCharState,
-    setCoinFadeOut: setCoinFadeOut
+    setCoinFadeOut: setCoinFadeOut,
+    startAnimationChain: startAnimationChain
   };
 }
 
@@ -537,7 +717,8 @@ function initChickenCanvas(config) {
   return {
     recalcAndRestart: controller.recalcAndRestart,
     setCharState: controller.setCharState,
-    setCoinFadeOut: controller.setCoinFadeOut
+    setCoinFadeOut: controller.setCoinFadeOut,
+    startAnimationChain: controller.startAnimationChain
   };
 }
 
@@ -589,10 +770,12 @@ var chickenCanvasConfig = {
     width: 1470,
     height: 1100
   }],
-  /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
+  /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
   char: {
     width: 225,
     height: 322,
+    /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
+    // sizeBreakpoints: [{ maxWidth: 600, width: 200, height: 286 }, ...],
     /** Затримка між кадрами jumping (ms) */
     jumpFrameDelay: 80,
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
@@ -679,6 +862,12 @@ var chickenCanvasConfig = {
     }, {
       id: 3
     }]
+  },
+  /** Animation chain: char стрибає по дузі до коінів по черзі. */
+  animationChain: {
+    jumpArcHeight: 60,
+    jumpDuration: 600,
+    betweenJumpsDelay: 500
   }};
 
 /**
@@ -760,6 +949,9 @@ function initPage() {
   if (chickenCanvas && typeof chickenCanvas.recalcAndRestart === 'function') {
     window.addEventListener('resize', chickenCanvas.recalcAndRestart);
     window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
+  }
+  if (chickenCanvas !== null && chickenCanvas !== void 0 && chickenCanvas.startAnimationChain) {
+    chickenCanvas.startAnimationChain();
   }
   document.querySelector('.land__btn[data-popup="popup"]');
   // if (popupBtn) popupBtn.style.pointerEvents = 'none';

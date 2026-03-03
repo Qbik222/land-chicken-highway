@@ -63,7 +63,7 @@ export function sortBackgroundBreakpoints(breakpoints) {
  * По вертикалі — центр land__canvas (wrapperHeight).
  */
 export function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl) {
-  const charHeight = charConfig.height ?? 228;
+  const { height: charHeight } = getCharSize(charConfig);
   const breakpoints = charConfig.breakpoints;
   const wrapperHeight = wrapperEl?.offsetHeight ?? canvasHeight;
   if (!breakpoints?.length) {
@@ -82,6 +82,23 @@ export function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight
     ? Math.max(0, Math.min((wrapperHeight - charHeight) / 2, canvasHeight - charHeight))
     : canvasHeight - charHeight - (bp.offsetY ?? 0);
   return { x, y };
+}
+
+/**
+ * Розмір char. Дефолт 225×322. Зміни тільки через charConfig.sizeBreakpoints.
+ */
+export function getCharSize(charConfig) {
+  if (!charConfig) return { width: 225, height: 322 };
+  if (charConfig.sizeBreakpoints?.length) {
+    return {
+      width: getValueFromBreakpoints(charConfig.sizeBreakpoints, 'width', 225),
+      height: getValueFromBreakpoints(charConfig.sizeBreakpoints, 'height', 322),
+    };
+  }
+  return {
+    width: charConfig.width ?? 225,
+    height: charConfig.height ?? 322,
+  };
 }
 
 /**
@@ -114,7 +131,7 @@ export function getCoinPositionForViewport(coinsConfig, charX, charWidth, index,
   const wrapperHeight = wrapperEl?.offsetHeight ?? canvasHeight;
   const y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
 
-  let leftEdge = charX + (charWidth ?? 160);
+  let leftEdge = charX + (charWidth ?? 225);
   for (let i = 0; i <= index; i++) {
     const gap =
       i === 0
@@ -164,9 +181,10 @@ function drawCoin(ctx, img, coinsConfig, x, y) {
   ctx.drawImage(img, x, y, coinsConfig.width, coinsConfig.height);
 }
 
-function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl) {
-  const { x, y } = getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl);
-  ctx.drawImage(charImg, x, y, charConfig.width, charConfig.height);
+function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl, overridePosition) {
+  const { width, height } = getCharSize(charConfig);
+  const pos = overridePosition ?? getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl);
+  ctx.drawImage(charImg, pos.x, pos.y, width, height);
 }
 
 export function createChickenCanvasController(config, elements) {
@@ -178,9 +196,20 @@ export function createChickenCanvasController(config, elements) {
     char: charConfig,
     coins: coinsConfig,
     barrier: barrierConfig,
+    animationChain: animationChainConfig,
   } = config;
 
   const bgBreakpoints = sortBackgroundBreakpoints(backgroundBreakpoints);
+
+  let charOverridePosition = null;
+  let initialCharPosition = null;
+  let chainActive = false;
+  let chainTargetCoinIndex = 0;
+  let chainStartX = 0;
+  let chainStartY = 0;
+  let chainTargetX = 0;
+  let chainStartTime = 0;
+  let chainJumpTimerId = null;
   let bgImage = null;
   let currentBgSrc = null;
 
@@ -193,7 +222,7 @@ export function createChickenCanvasController(config, elements) {
   let lastBp = null;
 
   const coinStates = (coinsConfig?.items || []).map(() => ({
-    state: 'fade-out',
+    state: 'static',
     frameIndex: 0,
     visible: true,
   }));
@@ -226,6 +255,78 @@ export function createChickenCanvasController(config, elements) {
     });
   }
 
+  function getCoinCenterX(coinIndex) {
+    const charSize = getCharSize(charConfig);
+    const pos = getCoinPositionForViewport(
+      coinsConfig, baseCharXForCoins(), charSize.width, coinIndex,
+      lastCanvasWidth, lastCanvasHeight, wrapperEl
+    );
+    return pos.x + (coinsConfig?.width ?? 134) / 2;
+  }
+
+  function getCoinCenterAsCharLeft(coinIndex) {
+    const charSize = getCharSize(charConfig);
+    const centerX = getCoinCenterX(coinIndex);
+    return centerX - charSize.width / 2;
+  }
+
+  function baseCharXForCoins() {
+    return (initialCharPosition ?? (charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null))?.x ?? 50;
+  }
+
+  function startJumpToCoin(targetIndex) {
+    if (targetIndex < 0 || targetIndex >= coinStates.length) return;
+    chainTargetCoinIndex = targetIndex;
+    const currentPos = charOverridePosition ?? initialCharPosition;
+    chainStartX = currentPos?.x ?? 50;
+    chainStartY = currentPos?.y ?? 0;
+    chainTargetX = getCoinCenterAsCharLeft(targetIndex);
+    chainStartTime = performance.now();
+    setCharState('jumping');
+  }
+
+  function updateChainJumpPosition() {
+    const jumpDuration = animationChainConfig?.jumpDuration ?? 600;
+    const arcHeight = animationChainConfig?.jumpArcHeight ?? 20;
+    const progress = Math.min(1, (performance.now() - chainStartTime) / jumpDuration);
+    if (progress >= 1) {
+      charOverridePosition = { x: chainTargetX, y: chainStartY };
+      setCoinFadeOut(chainTargetCoinIndex);
+      setCharState('stay');
+      return false;
+    }
+    const t = progress;
+    const x = chainStartX + t * (chainTargetX - chainStartX);
+    const y = chainStartY - 4 * arcHeight * t * (1 - t);
+    charOverridePosition = { x, y };
+    return true;
+  }
+
+  function scheduleNextChainJump(completedCoinIndex) {
+    const nextIndex = completedCoinIndex + 1;
+    const betweenDelay = animationChainConfig?.betweenJumpsDelay ?? 0;
+    const schedule = () => {
+      chainJumpTimerId = null;
+      if (nextIndex < coinStates.length) {
+        startJumpToCoin(nextIndex);
+      } else {
+        chainActive = false;
+      }
+    };
+    if (betweenDelay > 0) {
+      chainJumpTimerId = window.setTimeout(schedule, betweenDelay);
+    } else {
+      schedule();
+    }
+  }
+
+  function stopChainJumpTimer() {
+    if (chainJumpTimerId != null) {
+      clearTimeout(chainJumpTimerId);
+      chainJumpTimerId = null;
+    }
+  }
+
   function loadBarrierFramesTask() {
     if (!barrierConfig?.frames?.length) return Promise.resolve();
     return loadBarrierFrames(barrierConfig).then((imgs) => {
@@ -238,13 +339,15 @@ export function createChickenCanvasController(config, elements) {
     if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
 
+    const charSize = charConfig ? getCharSize(charConfig) : { width: 225, height: 322 };
     const charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
+    const baseCharX = (initialCharPosition ?? charPos)?.x ?? 50;
 
     if (coinsConfig && coinFrameImages.length > 0) {
       coinStates.forEach((coin, index) => {
         if (!coin.visible) return;
         const { x, y } = getCoinPositionForViewport(
-          coinsConfig, charPos?.x ?? 50, charConfig?.width ?? 160, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
+          coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
         );
         const frameIdx = coin.state === 'static' ? 0 : coin.frameIndex % coinFrameImages.length;
         const img = coinFrameImages[frameIdx];
@@ -256,7 +359,7 @@ export function createChickenCanvasController(config, elements) {
       barrierStates.forEach((barrier, index) => {
         if (!barrier.visible) return;
         const coinPos = getCoinPositionForViewport(
-          coinsConfig, charPos?.x ?? 50, charConfig?.width ?? 160, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
+          coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
         );
         const { x, y } = getBarrierPositionForViewport(
           barrierConfig, coinPos.x, coinPos.y, coinsConfig?.width ?? 134
@@ -271,7 +374,8 @@ export function createChickenCanvasController(config, elements) {
 
     if (charFrameImages.length > 0 && charConfig) {
       const frameIdx = charState === 'stay' ? 0 : charFrameIndex % charFrameImages.length;
-      drawChar(ctx, charFrameImages[frameIdx], charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+      const charDrawPos = charOverridePosition ?? charPos;
+      drawChar(ctx, charFrameImages[frameIdx], charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl, charDrawPos);
     }
   }
 
@@ -294,6 +398,9 @@ export function createChickenCanvasController(config, elements) {
           if (barrierFadeInTimerId == null) {
             const delay = barrierConfig?.fadeInFrameDelay ?? 60;
             barrierFadeInTimerId = window.setTimeout(barrierFadeInLoop, delay);
+          }
+          if (chainActive) {
+            scheduleNextChainJump(coinIndex);
           }
         }
       }
@@ -354,6 +461,10 @@ export function createChickenCanvasController(config, elements) {
 
   function jumpingLoop() {
     if (charState !== 'jumping') return;
+    if (chainActive) {
+      const continuing = updateChainJumpPosition();
+      if (!continuing) return;
+    }
     charFrameIndex = (charFrameIndex + 1) % (charFrameImages.length || 1);
     drawFullFrame();
     const delay = charConfig?.jumpFrameDelay ?? 80;
@@ -383,6 +494,10 @@ export function createChickenCanvasController(config, elements) {
     stopJumpingLoop();
     stopCoinFadeLoop();
     stopBarrierFadeInLoop();
+    stopChainJumpTimer();
+    chainActive = false;
+    charOverridePosition = null;
+    initialCharPosition = null;
     const { width, height } = getCanvasDimensionsFromBreakpoints(canvasBreakpoints);
     if (width <= 0 || height <= 0) return;
 
@@ -442,6 +557,15 @@ export function createChickenCanvasController(config, elements) {
     recalcAndRestart();
   }
 
+  function startAnimationChain() {
+    if (!charConfig || !coinsConfig || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
+    if (coinStates.length === 0) return;
+    initialCharPosition = getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    charOverridePosition = { ...initialCharPosition };
+    chainActive = true;
+    startJumpToCoin(0);
+  }
+
   if (charConfig?.frames?.length) {
     loadCharFrames();
   }
@@ -452,5 +576,5 @@ export function createChickenCanvasController(config, elements) {
     loadBarrierFramesTask();
   }
 
-  return { recalcAndRestart, handleInitClick, setCharState, setCoinFadeOut };
+  return { recalcAndRestart, handleInitClick, setCharState, setCoinFadeOut, startAnimationChain };
 }
