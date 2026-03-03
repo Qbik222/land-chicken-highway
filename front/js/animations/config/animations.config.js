@@ -26,8 +26,10 @@ export const chickenCanvasConfig = {
   ],
   /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
   char: {
-    width: 160,
-    height: 228,
+    width: 225,
+    height: 322,
+    /** Затримка між кадрами jumping (ms) */
+    jumpFrameDelay: 80,
     frames: [
       './img/canvas/char/frame-1.png',
       './img/canvas/char/frame-2.png',
@@ -46,6 +48,33 @@ export const chickenCanvasConfig = {
       { maxWidth: 950, offsetX: 50 },
       { maxWidth: Infinity, offsetX: 50 },
     ],
+  },
+  /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. */
+  coins: {
+    width: 134,
+    height: 172,
+    imagePath: './img/canvas/coin',
+    frames: [
+      './img/canvas/coin/frame-1.png',
+      './img/canvas/coin/frame-2.png',
+    ],
+    /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
+    offsetRightDefault: 40,
+    offsetRightBreakpoints: [
+      { maxWidth: 600, offsetRight: 40 },
+      { maxWidth: 950, offsetRight: 50 },
+      { maxWidth: Infinity, offsetRight: 50 },
+    ],
+    /** Відстань між коінами (px). viewportWidth <= maxWidth */
+    gapBreakpoints: [
+      { maxWidth: 600, gapBetween: 60 },
+      { maxWidth: 950, gapBetween: 70 },
+      { maxWidth: Infinity, gapBetween: 80 },
+    ],
+    /** Затримка між кадрами fade-out (ms) */
+    fadeFrameDelay: 120,
+    /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) */
+    items: [{ id: 0 }, { id: 1 }, { id: 2, gapBetweenLeft: 130 }, { id: 3 }],
   },
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
   override: null,

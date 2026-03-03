@@ -36,5 +36,6 @@ export function initChickenCanvas(config) {
   return {
     recalcAndRestart: controller.recalcAndRestart,
     setCharState: controller.setCharState,
+    setCoinFadeOut: controller.setCoinFadeOut,
   };
 }

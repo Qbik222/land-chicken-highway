@@ -40,6 +40,20 @@
 
 ---
 
+## Coins
+
+- **Розміри:** 134×172px (з конфігу)
+- **Шлях картинок:** `img/canvas/coin/` (frames: frame-1.png, frame-2.png, …)
+- **Стани:** `static` — статичний кадр (frame 0); `fade-out` — один цикл по кадрах, потім коін стає прозорим (visible: false)
+- **Позиціонування:** в ряд, відносно char
+  - Перший коін — `offsetRight` px вправо від char (breakpoints); `offsetRightDefault` — fallback у конфігу
+  - Кожен наступний — `gapBetween` px праворуч від попереднього (breakpoints)
+  - Кастом: `items[i].gapBetweenLeft` — відступ зліва для коіна i; `items[i].gapBetweenRight` — відступ справа (впливає на наступний коін)
+  - По вертикалі — центрування як у char (wrapperHeight)
+- **API:** `setCoinFadeOut(coinIndex)` — запустити fade-out для коіна з індексом `coinIndex`
+
+---
+
 ## Конфіг
 
 - Всі дані для рендеру беруться з конфігу, що передається з `main.js` в `chicken-canvas.js`
