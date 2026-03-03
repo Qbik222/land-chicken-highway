@@ -54,6 +54,17 @@
 
 ---
 
+## Barrier
+
+- **Розміри:** 171×112px (з конфігу)
+- **Шлях картинок:** `img/canvas/barrier/` (frames: frame-1.png … frame-6.png)
+- **Стани:** `hide` — не видимий; `fade-in` — анімація появи; `static` — статичний кадр (frame 6)
+- **Позиціонування:** barrier[i] центрується над coin[i], offsetAbove над монетою (breakpoints)
+- **Тригер:** коли coin[i] закінчує fade-out, barrier[i] автоматично запускає fade-in
+- **Порядок малювання:** Background → Coins → Barriers → Char
+
+---
+
 ## Конфіг
 
 - Всі дані для рендеру беруться з конфігу, що передається з `main.js` в `chicken-canvas.js`

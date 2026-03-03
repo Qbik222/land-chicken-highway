@@ -22,7 +22,7 @@ export const chickenCanvasConfig = {
     { maxWidth: 600, width: 536, height: 455 },
     { maxWidth: 950, width: 868, height: 736 },
     { maxWidth: 1368, width: 1046, height: 666 },
-    { maxWidth: Infinity, width: 1470, height: 700 },
+    { maxWidth: Infinity, width: 1470, height: 1100 },
   ],
   /** Char — розміри 160×228px, стани stay | jumping. Позиції по брейкпоінтах. */
   char: {
@@ -75,6 +75,29 @@ export const chickenCanvasConfig = {
     fadeFrameDelay: 120,
     /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) */
     items: [{ id: 0 }, { id: 1 }, { id: 2, gapBetweenLeft: 130 }, { id: 3 }],
+  },
+  /** Barrier — 171×112px, прив'язка до coin[i]. Стани hide | fade-in | static. */
+  barrier: {
+    width: 171,
+    height: 112,
+    imagePath: './img/canvas/barrier',
+    frames: [
+      './img/canvas/barrier/frame-1.png',
+      './img/canvas/barrier/frame-2.png',
+      './img/canvas/barrier/frame-3.png',
+      './img/canvas/barrier/frame-4.png',
+      './img/canvas/barrier/frame-5.png',
+      './img/canvas/barrier/frame-6.png',
+    ],
+    staticFrameIndex: 5,
+    offsetAboveDefault: 10,
+    offsetAboveBreakpoints: [
+      { maxWidth: 600, offsetAbove: 8 },
+      { maxWidth: 950, offsetAbove: 10 },
+      { maxWidth: Infinity, offsetAbove: 10 },
+    ],
+    fadeInFrameDelay: 60,
+    items: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
   },
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
   override: null,
