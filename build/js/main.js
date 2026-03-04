@@ -303,11 +303,41 @@ function loadBarrierFrames(barrierConfig) {
     return imgs.filter(Boolean);
   });
 }
+
+/** Дозволені комбінації fade-in при jumping: 2–3 машини, max 2 підряд. */
+function getValidFadeInCombos() {
+  return [[0, 1], [1, 2], [2, 3], [0, 2], [0, 3], [1, 3], [0, 1, 3], [0, 2, 3]];
+}
+function loadCarVariants(carsConfig) {
+  var _carsConfig$variants;
+  if (!(carsConfig !== null && carsConfig !== void 0 && (_carsConfig$variants = carsConfig.variants) !== null && _carsConfig$variants !== void 0 && _carsConfig$variants.length)) return Promise.resolve([]);
+  return Promise.all(carsConfig.variants.map(function (v) {
+    return loadImage(v.src).then(function (img) {
+      var _v$width, _v$height;
+      return {
+        img: img,
+        width: (_v$width = v.width) !== null && _v$width !== void 0 ? _v$width : 168,
+        height: (_v$height = v.height) !== null && _v$height !== void 0 ? _v$height : 342
+      };
+    }).catch(function () {
+      return null;
+    });
+  })).then(function (arr) {
+    return arr.filter(Boolean);
+  });
+}
+function pickRandomCarVariant(loadedVariants) {
+  if (!(loadedVariants !== null && loadedVariants !== void 0 && loadedVariants.length)) return null;
+  return loadedVariants[Math.floor(Math.random() * loadedVariants.length)];
+}
 function drawBarrier(ctx, img, barrierConfig, x, y) {
   ctx.drawImage(img, x, y, barrierConfig.width, barrierConfig.height);
 }
 function drawCoin(ctx, img, coinsConfig, x, y) {
   ctx.drawImage(img, x, y, coinsConfig.width, coinsConfig.height);
+}
+function drawCar(ctx, carImg, x, y, width, height) {
+  if (carImg) ctx.drawImage(carImg, x, y, width, height);
 }
 function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl, overridePosition) {
   var _getCharSize2 = getCharSize(charConfig),
@@ -317,7 +347,7 @@ function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl
   ctx.drawImage(charImg, pos.x, pos.y, width, height);
 }
 function createChickenCanvasController(config, elements) {
-  var _charConfig$frames2, _coinsConfig$frames4, _barrierConfig$frames5;
+  var _charConfig$frames2, _coinsConfig$frames4, _barrierConfig$frames5, _carsConfig$variants3;
   var wrapperEl = elements.wrapperEl,
     canvasEl = elements.canvasEl;
   var backgroundBreakpoints = config.backgroundBreakpoints,
@@ -327,6 +357,7 @@ function createChickenCanvasController(config, elements) {
     charConfig = config.char,
     coinsConfig = config.coins,
     barrierConfig = config.barrier,
+    carsConfig = config.cars,
     animationChainConfig = config.animationChain;
   var bgBreakpoints = sortBackgroundBreakpoints(backgroundBreakpoints);
   var charOverridePosition = null;
@@ -365,6 +396,18 @@ function createChickenCanvasController(config, elements) {
   });
   var barrierFrameImages = [];
   var barrierFadeInTimerId = null;
+  var carVariantImages = [];
+  var runningCars = [];
+  var fadeInCars = [];
+  var carSlotStates = ((coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) || []).map(function () {
+    return {
+      lastDriveEndTime: 0
+    };
+  });
+  var pendingJumpStart = false;
+  var chainFadeInCombo = null;
+  var carRunningRafId = null;
+  var carDriveScheduleTimers = [];
   function loadCharFrames() {
     var _charConfig$frames;
     if (!(charConfig !== null && charConfig !== void 0 && (_charConfig$frames = charConfig.frames) !== null && _charConfig$frames !== void 0 && _charConfig$frames.length)) return Promise.resolve();
@@ -463,6 +506,204 @@ function createChickenCanvasController(config, elements) {
       barrierFrameImages = imgs;
     });
   }
+  function loadCarVariantsTask() {
+    var _carsConfig$variants2;
+    if (!(carsConfig !== null && carsConfig !== void 0 && (_carsConfig$variants2 = carsConfig.variants) !== null && _carsConfig$variants2 !== void 0 && _carsConfig$variants2.length)) return Promise.resolve();
+    return loadCarVariants(carsConfig).then(function (arr) {
+      carVariantImages = arr;
+    });
+  }
+  function getCarPositionX(coinIndex) {
+    var _coinsConfig$width3;
+    var charSize = getCharSize(charConfig);
+    var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    return pos.x + ((_coinsConfig$width3 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width3 !== void 0 ? _coinsConfig$width3 : 134) / 2;
+  }
+  function getCarStartY(carHeight) {
+    var _carsConfig$offsetAbo;
+    var offset = (_carsConfig$offsetAbo = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.offsetAboveCanvas) !== null && _carsConfig$offsetAbo !== void 0 ? _carsConfig$offsetAbo : 20;
+    return -carHeight - offset;
+  }
+  function getCarFadeInTargetY(coinIndex, carHeight) {
+    var _coinsConfig$width4, _carsConfig$stopBefor;
+    var coinPos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), getCharSize(charConfig).width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
+    var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width4 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width4 !== void 0 ? _coinsConfig$width4 : 134),
+      barrierY = _getBarrierPositionFo.y;
+    var stopBefore = (_carsConfig$stopBefor = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.stopBeforeBarrier) !== null && _carsConfig$stopBefor !== void 0 ? _carsConfig$stopBefor : 20;
+    return barrierY - carHeight - stopBefore;
+  }
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+  function startCarRunning(coinIndex) {
+    var _carsConfig$maxConcur, _carsConfig$minStartG, _carSlotStates$coinIn, _carSlotStates$coinIn2;
+    if (!carsConfig || carVariantImages.length === 0) return;
+    if (pendingJumpStart) return;
+    var coin = coinStates[coinIndex];
+    if (!coin || coin.state === 'fade-out' || !coin.visible) return;
+    if (runningCars.some(function (c) {
+      return c.coinIndex === coinIndex;
+    })) {
+      scheduleNextCarDrive(coinIndex);
+      return;
+    }
+    if (fadeInCars.some(function (c) {
+      return c.coinIndex === coinIndex;
+    })) {
+      scheduleNextCarDrive(coinIndex);
+      return;
+    }
+    var maxConcurrent = (_carsConfig$maxConcur = carsConfig.maxConcurrent) !== null && _carsConfig$maxConcur !== void 0 ? _carsConfig$maxConcur : 2;
+    var minStartGap = ((_carsConfig$minStartG = carsConfig.minStartGap) !== null && _carsConfig$minStartG !== void 0 ? _carsConfig$minStartG : 1) * 1000;
+    var now = Date.now();
+    var lastEnd = (_carSlotStates$coinIn = (_carSlotStates$coinIn2 = carSlotStates[coinIndex]) === null || _carSlotStates$coinIn2 === void 0 ? void 0 : _carSlotStates$coinIn2.lastDriveEndTime) !== null && _carSlotStates$coinIn !== void 0 ? _carSlotStates$coinIn : 0;
+    if (runningCars.length >= maxConcurrent || now - lastEnd < minStartGap) {
+      scheduleNextCarDrive(coinIndex);
+      return;
+    }
+    var variant = pickRandomCarVariant(carVariantImages);
+    if (!variant) return;
+    var centerX = getCarPositionX(coinIndex);
+    var x = centerX - variant.width / 2;
+    var y = getCarStartY(variant.height);
+    runningCars.push({
+      coinIndex: coinIndex,
+      x: x,
+      y: y,
+      img: variant.img,
+      width: variant.width,
+      height: variant.height,
+      startTime: now
+    });
+    scheduleNextCarDrive(coinIndex);
+    if (!carRunningRafId) runCarRunningLoop();
+  }
+  function scheduleNextCarDrive(coinIndex) {
+    var _carsConfig$runningIn, _carsConfig$runningIn2;
+    var intervalMin = ((_carsConfig$runningIn = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.runningIntervalMin) !== null && _carsConfig$runningIn !== void 0 ? _carsConfig$runningIn : 4) * 1000;
+    var intervalMax = ((_carsConfig$runningIn2 = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.runningIntervalMax) !== null && _carsConfig$runningIn2 !== void 0 ? _carsConfig$runningIn2 : 10) * 1000;
+    var delay = randomBetween(intervalMin, intervalMax);
+    var id = window.setTimeout(function () {
+      for (var i = 0; i < carDriveScheduleTimers.length; i++) {
+        var _carDriveScheduleTime;
+        if (((_carDriveScheduleTime = carDriveScheduleTimers[i]) === null || _carDriveScheduleTime === void 0 ? void 0 : _carDriveScheduleTime.id) === id) {
+          carDriveScheduleTimers.splice(i, 1);
+          break;
+        }
+      }
+      startCarRunning(coinIndex);
+    }, delay);
+    carDriveScheduleTimers.push({
+      id: id,
+      coinIndex: coinIndex
+    });
+  }
+  function scheduleFirstCarDrives() {
+    var _carsConfig$runningIn3, _coinsConfig$items2;
+    if (!carsConfig || carVariantImages.length === 0) return;
+    var intervalMax = ((_carsConfig$runningIn3 = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.runningIntervalMax) !== null && _carsConfig$runningIn3 !== void 0 ? _carsConfig$runningIn3 : 10) * 1000;
+    ((_coinsConfig$items2 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) !== null && _coinsConfig$items2 !== void 0 ? _coinsConfig$items2 : []).forEach(function (_, i) {
+      var coin = coinStates[i];
+      if (!coin || coin.state === 'fade-out' || !coin.visible) return;
+      var delay = randomBetween(0, intervalMax);
+      var id = window.setTimeout(function () {
+        for (var j = 0; j < carDriveScheduleTimers.length; j++) {
+          var _carDriveScheduleTime2;
+          if (((_carDriveScheduleTime2 = carDriveScheduleTimers[j]) === null || _carDriveScheduleTime2 === void 0 ? void 0 : _carDriveScheduleTime2.id) === id) {
+            carDriveScheduleTimers.splice(j, 1);
+            break;
+          }
+        }
+        startCarRunning(i);
+      }, delay);
+      carDriveScheduleTimers.push({
+        id: id,
+        coinIndex: i
+      });
+    });
+  }
+  function runCarRunningLoop() {
+    var _carsConfig$runningSp, _carsConfig$runningSp2;
+    var speed = ((_carsConfig$runningSp = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.runningSpeed) !== null && _carsConfig$runningSp !== void 0 ? _carsConfig$runningSp : 0.8) * (chainActive ? (_carsConfig$runningSp2 = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.runningSpeedMultiplierDuringJump) !== null && _carsConfig$runningSp2 !== void 0 ? _carsConfig$runningSp2 : 1.5 : 1);
+    var dt = 16;
+    var dy = speed * dt;
+    for (var i = runningCars.length - 1; i >= 0; i--) {
+      var car = runningCars[i];
+      car.y += dy;
+      if (car.y >= lastCanvasHeight + car.height) {
+        carSlotStates[car.coinIndex].lastDriveEndTime = Date.now();
+        runningCars.splice(i, 1);
+      }
+    }
+    if (runningCars.length === 0) {
+      carRunningRafId = null;
+      if (pendingJumpStart) {
+        pendingJumpStart = false;
+        startJumpToCoin(0);
+      }
+      return;
+    }
+    drawFullFrame();
+    carRunningRafId = requestAnimationFrame(runCarRunningLoop);
+  }
+  function triggerCarFadeIn(coinIndex) {
+    if (!carsConfig || !barrierConfig || carVariantImages.length === 0) return;
+    if (chainActive && chainFadeInCombo && !chainFadeInCombo.has(coinIndex)) return;
+    if (fadeInCars.some(function (c) {
+      return c.coinIndex === coinIndex;
+    })) return;
+    var variant = pickRandomCarVariant(carVariantImages);
+    if (!variant) return;
+    var centerX = getCarPositionX(coinIndex);
+    var x = centerX - variant.width / 2;
+    var startY = getCarStartY(variant.height);
+    var targetY = getCarFadeInTargetY(coinIndex, variant.height);
+    fadeInCars.push({
+      coinIndex: coinIndex,
+      x: x,
+      y: startY,
+      targetY: targetY,
+      img: variant.img,
+      width: variant.width,
+      height: variant.height,
+      moving: true
+    });
+    if (!carFadeInRafId) runCarFadeInLoop();
+  }
+  var carFadeInRafId = null;
+  function runCarFadeInLoop() {
+    var _carsConfig$fadeInSpe;
+    var speed = (_carsConfig$fadeInSpe = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.fadeInSpeed) !== null && _carsConfig$fadeInSpe !== void 0 ? _carsConfig$fadeInSpe : 1.2;
+    var dt = 16;
+    var dy = speed * dt;
+    var hasMoving = false;
+    fadeInCars.forEach(function (car) {
+      if (!car.moving) return;
+      car.y += dy;
+      if (car.y >= car.targetY) {
+        car.y = car.targetY;
+        car.moving = false;
+      } else {
+        hasMoving = true;
+      }
+    });
+    drawFullFrame();
+    if (hasMoving) {
+      carFadeInRafId = requestAnimationFrame(runCarFadeInLoop);
+    } else {
+      carFadeInRafId = null;
+    }
+  }
+  function stopCarTimers() {
+    carDriveScheduleTimers.forEach(function (t) {
+      if ((t === null || t === void 0 ? void 0 : t.id) != null) clearTimeout(t.id);
+    });
+    carDriveScheduleTimers.length = 0;
+    if (carRunningRafId != null) {
+      cancelAnimationFrame(carRunningRafId);
+      carRunningRafId = null;
+    }
+  }
   function drawFullFrame() {
     var _x2, _ref3, _initialCharPosition2;
     var ctx = canvasEl.getContext('2d');
@@ -483,14 +724,24 @@ function createChickenCanvasController(config, elements) {
         if (img) drawCoin(ctx, img, coinsConfig, x, y);
       });
     }
+    if (carsConfig && carVariantImages.length > 0) {
+      fadeInCars.forEach(function (car) {
+        drawCar(ctx, car.img, car.x, car.y, car.width, car.height);
+      });
+      runningCars.forEach(function (car) {
+        if (car.y + car.height >= 0 && car.y <= lastCanvasHeight) {
+          drawCar(ctx, car.img, car.x, car.y, car.width, car.height);
+        }
+      });
+    }
     if (barrierConfig && coinsConfig && barrierFrameImages.length > 0) {
       barrierStates.forEach(function (barrier, index) {
-        var _coinsConfig$width3, _barrierConfig$static;
+        var _coinsConfig$width5, _barrierConfig$static;
         if (!barrier.visible) return;
         var coinPos = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-        var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width3 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width3 !== void 0 ? _coinsConfig$width3 : 134),
-          x = _getBarrierPositionFo.x,
-          y = _getBarrierPositionFo.y;
+        var _getBarrierPositionFo2 = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width5 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width5 !== void 0 ? _coinsConfig$width5 : 134),
+          x = _getBarrierPositionFo2.x,
+          y = _getBarrierPositionFo2.y;
         var frameIdx = barrier.state === 'static' ? (_barrierConfig$static = barrierConfig.staticFrameIndex) !== null && _barrierConfig$static !== void 0 ? _barrierConfig$static : 5 : barrier.frameIndex % barrierFrameImages.length;
         var img = barrierFrameImages[frameIdx];
         if (img) drawBarrier(ctx, img, barrierConfig, x, y);
@@ -520,6 +771,7 @@ function createChickenCanvasController(config, elements) {
           barrier.state = 'fade-in';
           barrier.visible = true;
           barrier.frameIndex = 0;
+          triggerCarFadeIn(coinIndex);
           if (barrierFadeInTimerId == null) {
             var _barrierConfig$fadeIn;
             var delay = (_barrierConfig$fadeIn = barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.fadeInFrameDelay) !== null && _barrierConfig$fadeIn !== void 0 ? _barrierConfig$fadeIn : 60;
@@ -623,6 +875,18 @@ function createChickenCanvasController(config, elements) {
     stopCoinFadeLoop();
     stopBarrierFadeInLoop();
     stopChainJumpTimer();
+    stopCarTimers();
+    if (carFadeInRafId != null) {
+      cancelAnimationFrame(carFadeInRafId);
+      carFadeInRafId = null;
+    }
+    runningCars = [];
+    fadeInCars = [];
+    carSlotStates.forEach(function (s) {
+      s.lastDriveEndTime = 0;
+    });
+    pendingJumpStart = false;
+    chainFadeInCombo = null;
     chainActive = false;
     charOverridePosition = null;
     initialCharPosition = null;
@@ -653,6 +917,9 @@ function createChickenCanvasController(config, elements) {
         var _delay = (_barrierConfig$fadeIn3 = barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.fadeInFrameDelay) !== null && _barrierConfig$fadeIn3 !== void 0 ? _barrierConfig$fadeIn3 : 60;
         barrierFadeInTimerId = window.setTimeout(barrierFadeInLoop, _delay);
       }
+      if (carsConfig && carVariantImages.length > 0) {
+        scheduleFirstCarDrives();
+      }
     };
     if (bp.src !== currentBgSrc) {
       loadImage(bp.src).then(function (img) {
@@ -662,6 +929,7 @@ function createChickenCanvasController(config, elements) {
         if (charConfig && charFrameImages.length === 0) promises.push(loadCharFrames());
         if (coinsConfig && coinFrameImages.length === 0) promises.push(loadCoinFramesTask());
         if (barrierConfig && barrierFrameImages.length === 0) promises.push(loadBarrierFramesTask());
+        if (carsConfig && carVariantImages.length === 0) promises.push(loadCarVariantsTask());
         Promise.all(promises).then(onReady);
         if (promises.length === 0) onReady();
       }).catch(function () {});
@@ -670,13 +938,15 @@ function createChickenCanvasController(config, elements) {
       if (charConfig && charFrameImages.length === 0) promises.push(loadCharFrames());
       if (coinsConfig && coinFrameImages.length === 0) promises.push(loadCoinFramesTask());
       if (barrierConfig && barrierFrameImages.length === 0) promises.push(loadBarrierFramesTask());
+      if (carsConfig && carVariantImages.length === 0) promises.push(loadCarVariantsTask());
       Promise.all(promises).then(onReady);
       if (promises.length === 0) onReady();
-    } else if (charConfig && charFrameImages.length === 0 || coinsConfig && coinFrameImages.length === 0 || barrierConfig && barrierFrameImages.length === 0) {
+    } else if (charConfig && charFrameImages.length === 0 || coinsConfig && coinFrameImages.length === 0 || barrierConfig && barrierFrameImages.length === 0 || carsConfig && carVariantImages.length === 0) {
       var _promises = [];
       if (charConfig && charFrameImages.length === 0) _promises.push(loadCharFrames());
       if (coinsConfig && coinFrameImages.length === 0) _promises.push(loadCoinFramesTask());
       if (barrierConfig && barrierFrameImages.length === 0) _promises.push(loadBarrierFramesTask());
+      if (carsConfig && carVariantImages.length === 0) _promises.push(loadCarVariantsTask());
       Promise.all(_promises).then(function () {
         return drawFullFrame();
       });
@@ -689,10 +959,16 @@ function createChickenCanvasController(config, elements) {
   function startAnimationChain() {
     if (!charConfig || !coinsConfig || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     if (coinStates.length === 0) return;
+    var combos = getValidFadeInCombos();
+    chainFadeInCombo = new Set(combos[Math.floor(Math.random() * combos.length)]);
     initialCharPosition = getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     charOverridePosition = _objectSpread2({}, initialCharPosition);
     chainActive = true;
-    startJumpToCoin(0);
+    if (carsConfig && runningCars.length > 0) {
+      pendingJumpStart = true;
+    } else {
+      startJumpToCoin(0);
+    }
   }
   if (charConfig !== null && charConfig !== void 0 && (_charConfig$frames2 = charConfig.frames) !== null && _charConfig$frames2 !== void 0 && _charConfig$frames2.length) {
     loadCharFrames();
@@ -702,6 +978,9 @@ function createChickenCanvasController(config, elements) {
   }
   if (barrierConfig !== null && barrierConfig !== void 0 && (_barrierConfig$frames5 = barrierConfig.frames) !== null && _barrierConfig$frames5 !== void 0 && _barrierConfig$frames5.length) {
     loadBarrierFramesTask();
+  }
+  if (carsConfig !== null && carsConfig !== void 0 && (_carsConfig$variants3 = carsConfig.variants) !== null && _carsConfig$variants3 !== void 0 && _carsConfig$variants3.length) {
+    loadCarVariantsTask();
   }
   return {
     recalcAndRestart: recalcAndRestart,
@@ -858,6 +1137,27 @@ var chickenCanvasConfig = {
       id: 3
     }]
   },
+  /** Cars — car-1 168×342, car-2 170×384. Випадковий візуал при кожному старті drive. Стани running | fade-in. */
+  cars: {
+    variants: [{
+      width: 168,
+      height: 342,
+      src: './img/canvas/car-1.png'
+    }, {
+      width: 170,
+      height: 384,
+      src: './img/canvas/car-2.png'
+    }],
+    offsetAboveCanvas: 20,
+    runningIntervalMin: 4,
+    runningIntervalMax: 10,
+    runningSpeed: 0.8,
+    minStartGap: 1,
+    maxConcurrent: 2,
+    stopBeforeBarrier: 20,
+    fadeInSpeed: 1.2,
+    runningSpeedMultiplierDuringJump: 1.5
+  },
   /** Animation chain: char стрибає по дузі до коінів по черзі. */
   animationChain: {
     jumpArcHeight: 60,
@@ -945,10 +1245,9 @@ function initPage() {
     window.addEventListener('resize', chickenCanvas.recalcAndRestart);
     window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
   }
-  // if (chickenCanvas?.startAnimationChain) {
-  //   chickenCanvas.startAnimationChain();
-  // }
-
+  if (chickenCanvas !== null && chickenCanvas !== void 0 && chickenCanvas.startAnimationChain) {
+    chickenCanvas.startAnimationChain();
+  }
   document.querySelector('.land__btn[data-popup="popup"]');
   // if (popupBtn) popupBtn.style.pointerEvents = 'none';
   // initAnimationChaining(fadeInPageConfig);

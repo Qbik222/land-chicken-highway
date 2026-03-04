@@ -97,6 +97,22 @@ export const chickenCanvasConfig = {
     fadeInFrameDelay: 60,
     items: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
   },
+  /** Cars — car-1 168×342, car-2 170×384. Випадковий візуал при кожному старті drive. Стани running | fade-in. */
+  cars: {
+    variants: [
+      { width: 168, height: 342, src: './img/canvas/car-1.png' },
+      { width: 170, height: 384, src: './img/canvas/car-2.png' },
+    ],
+    offsetAboveCanvas: 20,
+    runningIntervalMin: 4,
+    runningIntervalMax: 10,
+    runningSpeed: 0.8,
+    minStartGap: 1,
+    maxConcurrent: 2,
+    stopBeforeBarrier: 20,
+    fadeInSpeed: 1.2,
+    runningSpeedMultiplierDuringJump: 1.5,
+  },
   /** Animation chain: char стрибає по дузі до коінів по черзі. */
   animationChain: {
     jumpArcHeight: 60,
