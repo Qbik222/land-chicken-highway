@@ -17,12 +17,12 @@ export const chickenCanvasConfig = {
     { rootWidth: 536, rootHeight: 455, src: './img/canvas/bg-mob.jpg' },
   ],
   switchThreshold: 50,
-  /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. */
+  /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. isWrapperFill: true — розмір з wrapper (.land__canvas). */
   canvasBreakpoints: [
-    { maxWidth: 600, width: 536, height: 455 },
-    { maxWidth: 950, width: 868, height: 736 },
-    { maxWidth: 1368, width: 1046, height: 666 },
-    { maxWidth: Infinity, width: 1470, height: 1100 },
+    // { maxWidth: 600, width: 536, height: 455 },
+    // { maxWidth: 950, width: 868, height: 736 },
+    // { maxWidth: 1368, width: 1046, height: 666 },
+    { maxWidth: Infinity, width: 1360, height: 1540, isWrapperFill: false },
   ],
   /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
   char: {
@@ -48,7 +48,7 @@ export const chickenCanvasConfig = {
     breakpoints: [
       { maxWidth: 600, offsetX: 30 },
       { maxWidth: 950, offsetX: 50 },
-      { maxWidth: Infinity, offsetX: 50 },
+      { maxWidth: Infinity, offsetX: 100 },
     ],
   },
   /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. */
@@ -61,22 +61,18 @@ export const chickenCanvasConfig = {
       './img/canvas/coin/frame-2.png',
     ],
     /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
-    offsetRightDefault: 40,
+    offsetRightDefault: 70,
     offsetRightBreakpoints: [
-      { maxWidth: 600, offsetRight: 40 },
-      { maxWidth: 950, offsetRight: 50 },
-      { maxWidth: Infinity, offsetRight: 50 },
+      { maxWidth: Infinity, offsetRight: 40 },
     ],
     /** Відстань між коінами (px). viewportWidth <= maxWidth */
     gapBreakpoints: [
-      { maxWidth: 600, gapBetween: 60 },
-      { maxWidth: 950, gapBetween: 70 },
-      { maxWidth: Infinity, gapBetween: 80 },
+      { maxWidth: Infinity, gapBetween: 70 },
     ],
     /** Затримка між кадрами fade-out (ms) */
     fadeFrameDelay: 120,
     /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) */
-    items: [{ id: 0 }, { id: 1 }, { id: 2, gapBetweenLeft: 130 }, { id: 3 }],
+    items: [{ id: 0 }, { id: 1 }, { id: 2, gapBetweenLeft: 50 }, { id: 3 }],
   },
   /** Barrier — 171×112px, прив'язка до coin[i]. Стани hide | fade-in | static. */
   barrier: {

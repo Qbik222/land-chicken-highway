@@ -16,9 +16,9 @@ function initPage() {
     window.addEventListener('resize', chickenCanvas.recalcAndRestart);
     window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
   }
-  if (chickenCanvas?.startAnimationChain) {
-    chickenCanvas.startAnimationChain();
-  }
+  // if (chickenCanvas?.startAnimationChain) {
+  //   chickenCanvas.startAnimationChain();
+  // }
 
   const popupBtn = document.querySelector('.land__btn[data-popup="popup"]');
   // if (popupBtn) popupBtn.style.pointerEvents = 'none';

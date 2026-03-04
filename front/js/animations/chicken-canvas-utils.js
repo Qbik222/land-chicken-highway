@@ -3,7 +3,10 @@
  * Умови: front/canvas-flow.md
  */
 
-export function getCanvasDimensionsFromBreakpoints(sizeBreakpoints) {
+/**
+ * Розміри canvas з брейкпоінтів. Якщо bp.isWrapperFill === true — width/height з wrapperEl.
+ */
+export function getCanvasDimensionsFromBreakpoints(sizeBreakpoints, wrapperEl) {
   const sorted = [...(sizeBreakpoints || [])].sort(
     (a, b) => (a.maxWidth ?? Infinity) - (b.maxWidth ?? Infinity)
   );
@@ -11,10 +14,16 @@ export function getCanvasDimensionsFromBreakpoints(sizeBreakpoints) {
   for (let i = 0; i < sorted.length; i++) {
     const bp = sorted[i];
     if (viewportWidth <= (bp.maxWidth ?? Infinity)) {
+      if (bp.isWrapperFill && wrapperEl) {
+        return { width: wrapperEl.offsetWidth || bp.width, height: wrapperEl.offsetHeight || bp.height };
+      }
       return { width: bp.width, height: bp.height };
     }
   }
   const last = sorted[sorted.length - 1];
+  if (last?.isWrapperFill && wrapperEl) {
+    return { width: wrapperEl.offsetWidth || last.width, height: wrapperEl.offsetHeight || last.height };
+  }
   return last ? { width: last.width, height: last.height } : { width: 536, height: 455 };
 }
 
@@ -42,14 +51,10 @@ export function loadImage(src) {
 }
 
 export function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, canvasHeight) {
-  const scale = Math.max(
-    canvasWidth / rootWidth,
-    canvasHeight / rootHeight
-  );
-  const drawWidth = rootWidth * scale;
-  const drawHeight = rootHeight * scale;
-  const x = ((canvasWidth - drawWidth) / 2) - 50;
-  const y = (canvasHeight - drawHeight) / 2;
+  const drawWidth = canvasWidth;
+  const drawHeight = canvasHeight;
+  const x = 0;
+  const y = 0;
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }
 
@@ -498,7 +503,7 @@ export function createChickenCanvasController(config, elements) {
     chainActive = false;
     charOverridePosition = null;
     initialCharPosition = null;
-    const { width, height } = getCanvasDimensionsFromBreakpoints(canvasBreakpoints);
+    const { width, height } = getCanvasDimensionsFromBreakpoints(canvasBreakpoints, wrapperEl);
     if (width <= 0 || height <= 0) return;
 
     const bp = getBackgroundBreakpointForWidth(bgBreakpoints, width, switchThreshold);
