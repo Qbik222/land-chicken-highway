@@ -220,38 +220,51 @@ function getCharSize(charConfig) {
  * first where viewportWidth <= maxWidth.
  */
 function getValueFromBreakpoints(breakpoints, key, fallback) {
-  var _sorted$find2, _bp$key;
+  var _bp$key;
   if (!(breakpoints !== null && breakpoints !== void 0 && breakpoints.length)) return fallback;
+  var bp = getMatchedBreakpoint(breakpoints);
+  return (_bp$key = bp === null || bp === void 0 ? void 0 : bp[key]) !== null && _bp$key !== void 0 ? _bp$key : fallback;
+}
+
+/**
+ * Повертає breakpoint, що відповідає поточному viewportWidth.
+ */
+function getMatchedBreakpoint(breakpoints) {
+  var _sorted$find2;
+  if (!(breakpoints !== null && breakpoints !== void 0 && breakpoints.length)) return null;
   var sorted = _toConsumableArray(breakpoints).sort(function (a, b) {
     var _a$maxWidth3, _b$maxWidth3;
     return ((_a$maxWidth3 = a.maxWidth) !== null && _a$maxWidth3 !== void 0 ? _a$maxWidth3 : Infinity) - ((_b$maxWidth3 = b.maxWidth) !== null && _b$maxWidth3 !== void 0 ? _b$maxWidth3 : Infinity);
   });
   var viewportWidth = window.innerWidth;
-  var bp = (_sorted$find2 = sorted.find(function (p) {
+  return (_sorted$find2 = sorted.find(function (p) {
     var _p$maxWidth2;
     return viewportWidth <= ((_p$maxWidth2 = p.maxWidth) !== null && _p$maxWidth2 !== void 0 ? _p$maxWidth2 : Infinity);
   })) !== null && _sorted$find2 !== void 0 ? _sorted$find2 : sorted[sorted.length - 1];
-  return (_bp$key = bp[key]) !== null && _bp$key !== void 0 ? _bp$key : fallback;
 }
 
 /**
  * Позиція коіна відносно char. Перший коін — offsetRight px вправо від char, далі в ряд з gapBetween.
  * По вертикалі — центр land__canvas.
  * Кожен item може мати gapBetweenLeft (відступ зліва) або gapBetweenRight (відступ справа) для кастомного інтервалу.
+ * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
  */
 function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
-  var _coinsConfig$width, _coinsConfig$height, _getValueFromBreakpoi, _coinsConfig$offsetRi, _coinsConfig$items, _wrapperEl$offsetHeig2;
+  var _coinsConfig$width, _coinsConfig$height, _getValueFromBreakpoi, _coinsConfig$offsetRi, _gapBp$gapBetween, _coinsConfig$items, _wrapperEl$offsetHeig2;
   var w = (_coinsConfig$width = coinsConfig.width) !== null && _coinsConfig$width !== void 0 ? _coinsConfig$width : 134;
   var h = (_coinsConfig$height = coinsConfig.height) !== null && _coinsConfig$height !== void 0 ? _coinsConfig$height : 172;
   var offsetRight = (_getValueFromBreakpoi = getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null)) !== null && _getValueFromBreakpoi !== void 0 ? _getValueFromBreakpoi : (_coinsConfig$offsetRi = coinsConfig.offsetRightDefault) !== null && _coinsConfig$offsetRi !== void 0 ? _coinsConfig$offsetRi : 50;
-  var gapBetween = getValueFromBreakpoints(coinsConfig.gapBreakpoints, 'gapBetween', 70);
+  var gapBp = getMatchedBreakpoint(coinsConfig.gapBreakpoints);
+  var gapBetween = (_gapBp$gapBetween = gapBp === null || gapBp === void 0 ? void 0 : gapBp.gapBetween) !== null && _gapBp$gapBetween !== void 0 ? _gapBp$gapBetween : 70;
   var items = (_coinsConfig$items = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) !== null && _coinsConfig$items !== void 0 ? _coinsConfig$items : [];
   var wrapperHeight = (_wrapperEl$offsetHeig2 = wrapperEl === null || wrapperEl === void 0 ? void 0 : wrapperEl.offsetHeight) !== null && _wrapperEl$offsetHeig2 !== void 0 ? _wrapperEl$offsetHeig2 : canvasHeight;
   var y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
   var leftEdge = charX + (charWidth !== null && charWidth !== void 0 ? charWidth : 225);
   for (var i = 0; i <= index; i++) {
-    var _items$i$gapBetweenLe, _items$i, _ref, _items$i$gapBetweenLe2, _items$i2, _items;
-    var gap = i === 0 ? (_items$i$gapBetweenLe = (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _items$i$gapBetweenLe !== void 0 ? _items$i$gapBetweenLe : offsetRight : (_ref = (_items$i$gapBetweenLe2 = (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _items$i$gapBetweenLe2 !== void 0 ? _items$i$gapBetweenLe2 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref !== void 0 ? _ref : gapBetween;
+    var _gapBp$itemGaps, _gapBp$itemGaps2, _ref, _itemGap$gapBetweenLe, _items$i, _ref2, _ref3, _ref4, _itemGap$gapBetweenLe2, _items$i2, _items;
+    var itemGap = gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps = gapBp.itemGaps) === null || _gapBp$itemGaps === void 0 ? void 0 : _gapBp$itemGaps[i];
+    var prevItemGap = i > 0 ? gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps2 = gapBp.itemGaps) === null || _gapBp$itemGaps2 === void 0 ? void 0 : _gapBp$itemGaps2[i - 1] : null;
+    var gap = i === 0 ? (_ref = (_itemGap$gapBetweenLe = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe !== void 0 ? _itemGap$gapBetweenLe : (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _ref !== void 0 ? _ref : offsetRight : (_ref2 = (_ref3 = (_ref4 = (_itemGap$gapBetweenLe2 = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe2 !== void 0 ? _itemGap$gapBetweenLe2 : (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _ref4 !== void 0 ? _ref4 : prevItemGap === null || prevItemGap === void 0 ? void 0 : prevItemGap.gapBetweenRight) !== null && _ref3 !== void 0 ? _ref3 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref2 !== void 0 ? _ref2 : gapBetween;
     if (i === index) {
       return {
         x: leftEdge + gap,
@@ -438,8 +451,8 @@ function createChickenCanvasController(config, elements) {
     return centerX - charSize.width / 2;
   }
   function baseCharXForCoins() {
-    var _x, _ref2, _initialCharPosition;
-    return (_x = (_ref2 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref2 === void 0 ? void 0 : _ref2.x) !== null && _x !== void 0 ? _x : 50;
+    var _x, _ref5, _initialCharPosition;
+    return (_x = (_ref5 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref5 === void 0 ? void 0 : _ref5.x) !== null && _x !== void 0 ? _x : 50;
   }
   function startJumpToCoin(targetIndex) {
     var _charOverridePosition, _currentPos$x, _currentPos$y;
@@ -705,14 +718,14 @@ function createChickenCanvasController(config, elements) {
     }
   }
   function drawFullFrame() {
-    var _x2, _ref3, _initialCharPosition2;
+    var _x2, _ref6, _initialCharPosition2;
     var ctx = canvasEl.getContext('2d');
     if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
     var charSize = charConfig ? getCharSize(charConfig) : {
       width: 225};
     var charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
-    var baseCharX = (_x2 = (_ref3 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref3 === void 0 ? void 0 : _ref3.x) !== null && _x2 !== void 0 ? _x2 : 50;
+    var baseCharX = (_x2 = (_ref6 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref6 === void 0 ? void 0 : _ref6.x) !== null && _x2 !== void 0 ? _x2 : 50;
     if (coinsConfig && coinFrameImages.length > 0) {
       coinStates.forEach(function (coin, index) {
         if (!coin.visible) return;
@@ -1046,11 +1059,11 @@ var chickenCanvasConfig = {
   }],
   switchThreshold: 50,
   /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. isWrapperFill: true — розмір з wrapper (.land__canvas). */
-  canvasBreakpoints: [
-  // { maxWidth: 600, width: 536, height: 455 },
-  // { maxWidth: 950, width: 868, height: 736 },
-  // { maxWidth: 1368, width: 1046, height: 666 },
-  {
+  canvasBreakpoints: [{
+    maxWidth: 1700,
+    width: 1200,
+    height: 1540
+  }, {
     maxWidth: Infinity,
     width: 1360,
     height: 1540,
@@ -1067,11 +1080,8 @@ var chickenCanvasConfig = {
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [{
-      maxWidth: 600,
-      offsetX: 30
-    }, {
-      maxWidth: 950,
-      offsetX: 50
+      maxWidth: 1700,
+      offsetX: 70
     }, {
       maxWidth: Infinity,
       offsetX: 100
@@ -1086,24 +1096,39 @@ var chickenCanvasConfig = {
     /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
     offsetRightDefault: 70,
     offsetRightBreakpoints: [{
+      maxWidth: 1700,
+      offsetRight: 20
+    }, {
       maxWidth: Infinity,
       offsetRight: 40
     }],
-    /** Відстань між коінами (px). viewportWidth <= maxWidth */
+    /** Відстань між коінами (px). viewportWidth <= maxWidth. itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } */
     gapBreakpoints: [{
+      maxWidth: 1700,
+      gapBetween: 30,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 40
+        }
+      }
+    }, {
       maxWidth: Infinity,
-      gapBetween: 70
+      gapBetween: 70,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 50
+        }
+      }
     }],
     /** Затримка між кадрами fade-out (ms) */
     fadeFrameDelay: 120,
-    /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) */
+    /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) — fallback якщо нема в itemGaps */
     items: [{
       id: 0
     }, {
       id: 1
     }, {
-      id: 2,
-      gapBetweenLeft: 50
+      id: 2
     }, {
       id: 3
     }]
@@ -1245,9 +1270,10 @@ function initPage() {
     window.addEventListener('resize', chickenCanvas.recalcAndRestart);
     window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
   }
-  if (chickenCanvas !== null && chickenCanvas !== void 0 && chickenCanvas.startAnimationChain) {
-    chickenCanvas.startAnimationChain();
-  }
+  //  if (chickenCanvas?.startAnimationChain) {
+  //    chickenCanvas.startAnimationChain();
+  //  }
+
   document.querySelector('.land__btn[data-popup="popup"]');
   // if (popupBtn) popupBtn.style.pointerEvents = 'none';
   // initAnimationChaining(fadeInPageConfig);

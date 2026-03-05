@@ -112,18 +112,27 @@ export function getCharSize(charConfig) {
  */
 export function getValueFromBreakpoints(breakpoints, key, fallback) {
   if (!breakpoints?.length) return fallback;
+  const bp = getMatchedBreakpoint(breakpoints);
+  return bp?.[key] ?? fallback;
+}
+
+/**
+ * Повертає breakpoint, що відповідає поточному viewportWidth.
+ */
+export function getMatchedBreakpoint(breakpoints) {
+  if (!breakpoints?.length) return null;
   const sorted = [...breakpoints].sort(
     (a, b) => (a.maxWidth ?? Infinity) - (b.maxWidth ?? Infinity)
   );
   const viewportWidth = window.innerWidth;
-  const bp = sorted.find((p) => viewportWidth <= (p.maxWidth ?? Infinity)) ?? sorted[sorted.length - 1];
-  return bp[key] ?? fallback;
+  return sorted.find((p) => viewportWidth <= (p.maxWidth ?? Infinity)) ?? sorted[sorted.length - 1];
 }
 
 /**
  * Позиція коіна відносно char. Перший коін — offsetRight px вправо від char, далі в ряд з gapBetween.
  * По вертикалі — центр land__canvas.
  * Кожен item може мати gapBetweenLeft (відступ зліва) або gapBetweenRight (відступ справа) для кастомного інтервалу.
+ * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
  */
 export function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
   const w = coinsConfig.width ?? 134;
@@ -131,17 +140,20 @@ export function getCoinPositionForViewport(coinsConfig, charX, charWidth, index,
   const offsetRight =
     getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null) ??
     (coinsConfig.offsetRightDefault ?? 50);
-  const gapBetween = getValueFromBreakpoints(coinsConfig.gapBreakpoints, 'gapBetween', 70);
+  const gapBp = getMatchedBreakpoint(coinsConfig.gapBreakpoints);
+  const gapBetween = gapBp?.gapBetween ?? 70;
   const items = coinsConfig?.items ?? [];
   const wrapperHeight = wrapperEl?.offsetHeight ?? canvasHeight;
   const y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
 
   let leftEdge = charX + (charWidth ?? 225);
   for (let i = 0; i <= index; i++) {
+    const itemGap = gapBp?.itemGaps?.[i];
+    const prevItemGap = i > 0 ? gapBp?.itemGaps?.[i - 1] : null;
     const gap =
       i === 0
-        ? (items[i]?.gapBetweenLeft ?? offsetRight)
-        : (items[i]?.gapBetweenLeft ?? items[i - 1]?.gapBetweenRight ?? gapBetween);
+        ? (itemGap?.gapBetweenLeft ?? items[i]?.gapBetweenLeft ?? offsetRight)
+        : (itemGap?.gapBetweenLeft ?? items[i]?.gapBetweenLeft ?? prevItemGap?.gapBetweenRight ?? items[i - 1]?.gapBetweenRight ?? gapBetween);
     if (i === index) {
       return { x: leftEdge + gap, y };
     }
