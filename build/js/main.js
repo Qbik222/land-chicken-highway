@@ -1078,7 +1078,7 @@ var chickenCanvasConfig = {
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [{
-      maxWidth: 1700,
+      maxWidth: 1750,
       offsetX: 70
     }, {
       maxWidth: Infinity,

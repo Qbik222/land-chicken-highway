@@ -44,7 +44,7 @@ export const chickenCanvasConfig = {
     ],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [
-      { maxWidth: 1700, offsetX: 70 },
+      { maxWidth: 1750, offsetX: 70 },
       { maxWidth: Infinity, offsetX: 100 },
     ],
   },
