@@ -273,6 +273,7 @@ export function createChickenCanvasController(config, elements) {
     visible: true,
   }));
   let coinFrameImages = [];
+  let coinStaticImage = null;
   let coinFadeTimerId = null;
 
   const barrierStates = (barrierConfig?.items || []).map(() => ({
@@ -304,10 +305,15 @@ export function createChickenCanvasController(config, elements) {
   }
 
   function loadCoinFramesTask() {
-    if (!coinsConfig?.frames?.length) return Promise.resolve();
-    return loadCoinFrames(coinsConfig).then((imgs) => {
-      coinFrameImages = imgs;
-    });
+    const promises = [];
+    if (coinsConfig?.frames?.length) {
+      promises.push(loadCoinFrames(coinsConfig).then((imgs) => { coinFrameImages = imgs; }));
+    }
+    const staticSrc = coinsConfig?.staticFrame ?? (coinsConfig?.imagePath ? `${coinsConfig.imagePath}/static.png` : null);
+    if (staticSrc) {
+      promises.push(loadImage(staticSrc).then((img) => { coinStaticImage = img; }).catch(() => {}));
+    }
+    return promises.length ? Promise.all(promises) : Promise.resolve();
   }
 
   function getCoinCenterX(coinIndex) {
@@ -608,14 +614,15 @@ export function createChickenCanvasController(config, elements) {
     const charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
     const baseCharX = (initialCharPosition ?? charPos)?.x ?? 50;
 
-    if (coinsConfig && coinFrameImages.length > 0) {
+    if (coinsConfig && (coinStaticImage || coinFrameImages.length > 0)) {
       coinStates.forEach((coin, index) => {
         if (!coin.visible) return;
         const { x, y } = getCoinPositionForViewport(
           coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
         );
-        const frameIdx = coin.state === 'static' ? 0 : coin.frameIndex % coinFrameImages.length;
-        const img = coinFrameImages[frameIdx];
+        const img = coin.state === 'static'
+          ? (coinStaticImage ?? coinFrameImages[0])
+          : coinFrameImages[coin.frameIndex % coinFrameImages.length];
         if (img) drawCoin(ctx, img, coinsConfig, x, y);
       });
     }

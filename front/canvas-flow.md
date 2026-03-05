@@ -44,8 +44,8 @@
 ## Coins
 
 - **Розміри:** 134×172px (з конфігу)
-- **Шлях картинок:** `img/canvas/coin/` (frames: frame-1.png, frame-2.png, …)
-- **Стани:** `static` — статичний кадр (frame 0); `fade-out` — один цикл по кадрах, потім коін стає прозорим (visible: false)
+- **Шлях картинок:** `img/canvas/coin/` (static.png для static; frames: frame-1.png, frame-2.png, … для fade-out)
+- **Стани:** `static` — кадр static.png з папки coin; `fade-out` — один цикл по кадрах frame-1, frame-2, потім коін стає прозорим (visible: false)
 - **Позиціонування:** в ряд, відносно char
   - Перший коін — `offsetRight` px вправо від char (breakpoints); `offsetRightDefault` — fallback у конфігу
   - Кожен наступний — `gapBetween` px праворуч від попереднього (breakpoints)

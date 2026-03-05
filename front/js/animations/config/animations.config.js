@@ -48,11 +48,12 @@ export const chickenCanvasConfig = {
       { maxWidth: Infinity, offsetX: 100 },
     ],
   },
-  /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. */
+  /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. static — static.png з папки. */
   coins: {
     width: 134,
     height: 172,
     imagePath: './img/canvas/coin',
+    staticFrame: './img/canvas/coin/static.png',
     frames: [
       './img/canvas/coin/frame-1.png',
       './img/canvas/coin/frame-2.png',

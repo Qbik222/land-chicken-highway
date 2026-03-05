@@ -399,6 +399,7 @@ function createChickenCanvasController(config, elements) {
     };
   });
   var coinFrameImages = [];
+  var coinStaticImage = null;
   var coinFadeTimerId = null;
   var barrierStates = ((barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.items) || []).map(function () {
     return {
@@ -433,11 +434,20 @@ function createChickenCanvasController(config, elements) {
     });
   }
   function loadCoinFramesTask() {
-    var _coinsConfig$frames2;
-    if (!(coinsConfig !== null && coinsConfig !== void 0 && (_coinsConfig$frames2 = coinsConfig.frames) !== null && _coinsConfig$frames2 !== void 0 && _coinsConfig$frames2.length)) return Promise.resolve();
-    return loadCoinFrames(coinsConfig).then(function (imgs) {
-      coinFrameImages = imgs;
-    });
+    var _coinsConfig$frames2, _coinsConfig$staticFr;
+    var promises = [];
+    if (coinsConfig !== null && coinsConfig !== void 0 && (_coinsConfig$frames2 = coinsConfig.frames) !== null && _coinsConfig$frames2 !== void 0 && _coinsConfig$frames2.length) {
+      promises.push(loadCoinFrames(coinsConfig).then(function (imgs) {
+        coinFrameImages = imgs;
+      }));
+    }
+    var staticSrc = (_coinsConfig$staticFr = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.staticFrame) !== null && _coinsConfig$staticFr !== void 0 ? _coinsConfig$staticFr : coinsConfig !== null && coinsConfig !== void 0 && coinsConfig.imagePath ? "".concat(coinsConfig.imagePath, "/static.png") : null;
+    if (staticSrc) {
+      promises.push(loadImage(staticSrc).then(function (img) {
+        coinStaticImage = img;
+      }).catch(function () {}));
+    }
+    return promises.length ? Promise.all(promises) : Promise.resolve();
   }
   function getCoinCenterX(coinIndex) {
     var _coinsConfig$width2;
@@ -726,14 +736,14 @@ function createChickenCanvasController(config, elements) {
       width: 225};
     var charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
     var baseCharX = (_x2 = (_ref6 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref6 === void 0 ? void 0 : _ref6.x) !== null && _x2 !== void 0 ? _x2 : 50;
-    if (coinsConfig && coinFrameImages.length > 0) {
+    if (coinsConfig && (coinStaticImage || coinFrameImages.length > 0)) {
       coinStates.forEach(function (coin, index) {
+        var _coinStaticImage;
         if (!coin.visible) return;
         var _getCoinPositionForVi = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl),
           x = _getCoinPositionForVi.x,
           y = _getCoinPositionForVi.y;
-        var frameIdx = coin.state === 'static' ? 0 : coin.frameIndex % coinFrameImages.length;
-        var img = coinFrameImages[frameIdx];
+        var img = coin.state === 'static' ? (_coinStaticImage = coinStaticImage) !== null && _coinStaticImage !== void 0 ? _coinStaticImage : coinFrameImages[0] : coinFrameImages[coin.frameIndex % coinFrameImages.length];
         if (img) drawCoin(ctx, img, coinsConfig, x, y);
       });
     }
@@ -1085,11 +1095,12 @@ var chickenCanvasConfig = {
       offsetX: 100
     }]
   },
-  /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. */
+  /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. static — static.png з папки. */
   coins: {
     width: 134,
     height: 172,
     imagePath: './img/canvas/coin',
+    staticFrame: './img/canvas/coin/static.png',
     frames: ['./img/canvas/coin/frame-1.png', './img/canvas/coin/frame-2.png'],
     /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
     offsetRightDefault: 70,

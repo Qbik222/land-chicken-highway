@@ -2,6 +2,135 @@
 
 ---
 
+## Chicken Canvas — стани елементів і флоу
+
+Canvas-анімація з персонажем (char), монетами (coins), бар'єрами (barriers) та машинами (cars). Логіка в `chicken-canvas.js`, `chicken-canvas-utils.js`. Конфіг — `animations.config.js`. Умови роботи — `front/canvas-flow.md`.
+
+### Порядок малювання
+
+Background → Coins → Cars → Barriers → Char
+
+---
+
+### Char (персонаж)
+
+| Стан      | Опис                                                                 |
+|-----------|----------------------------------------------------------------------|
+| `stay`    | Статичний кадр (frame 1). Відображається завжди, коли не jumping.     |
+| `jumping` | Циклічна анімація frame 1…10. Char летить по дузі до коіна.         |
+
+**Переходи:**
+- `stay` → `jumping`: `startJumpToCoin(index)` — запуск ланцюга або окремий стрибок.
+- `jumping` → `stay`: коли char досягає цільового коіна (progress >= 1), викликається `setCoinFadeOut(coinIndex)` і `setCharState('stay')`.
+
+**Позиціонування:** по вертикалі — центр `.land__canvas`; по горизонталі — `offsetX` від лівого краю (breakpoints). Під час jumping позиція інтерполюється по дузі.
+
+---
+
+### Coins (монети)
+
+| Стан      | visible | Опис                                                                 |
+|-----------|---------|----------------------------------------------------------------------|
+| `static`  | true    | Кадр static.png з папки coin. Монета видима.                        |
+| `fade-out`| true    | Анімація зникнення — цикл по frame-1, frame-2, … Після останнього кадру монета зникає. |
+| `static`  | false   | Після fade-out. Монета не малюється.                                |
+
+**Переходи:**
+- `static` + visible → `fade-out`: `setCoinFadeOut(coinIndex)` — коли char досягає коіна.
+- `fade-out` → `static` + visible=false: коли `coin.frameIndex >= frames.length` — монета прибирається, запускається barrier fade-in і car fade-in для цього слоту.
+
+**Позиціонування:** в ряд праворуч від char. Перший — `offsetRight` px; далі — `gapBetween` або `itemGaps` по breakpoints.
+
+---
+
+### Barrier (бар'єр)
+
+| Стан     | visible | Опис                                                                 |
+|----------|---------|----------------------------------------------------------------------|
+| `hide`   | false   | Не видимий. Бар'єр над coin[i] ще не активний.                      |
+| `fade-in`| true    | Анімація появи — цикл по frame 1…6.                                 |
+| `static` | true    | Статичний кадр (frame 6). Бар'єр залишається на місці.              |
+
+**Переходи:**
+- `hide` → `fade-in`: коли coin[i] завершує fade-out — barrier[i] стає видимим і починає fade-in.
+- `fade-in` → `static`: коли `barrier.frameIndex >= frames.length`.
+
+**Позиціонування:** barrier[i] центрується над coin[i], з `offsetAbove` над монетою (breakpoints).
+
+---
+
+### Cars (машини)
+
+| Тип     | Опис                                                                 |
+|---------|----------------------------------------------------------------------|
+| running | Їде зверху вниз по vertical. Вибір car-1 або car-2 — випадково при кожному старті. |
+| fade-in | З'являється зверху, їде до barrier і зупиняється за 20px до нього.   |
+
+**Умови спавну running:**
+- Coin у стані `static` і visible (char ще не досяг).
+- Немає running машини на цьому coin slot.
+- Немає fade-in машини на цьому slot.
+- `pendingJumpStart === false`.
+- max 2 running машини глобально, min 1 с між стартами на slot.
+
+**Умови спавну fade-in:**
+- Коли coin[i] завершує fade-out — автоматично викликається `triggerCarFadeIn(coinIndex)`.
+- Якщо chainActive і chainFadeInCombo — тільки для слотів з `chainFadeInCombo.has(coinIndex)` (2–3 машини з 4, комбінації типу [0,1], [1,2], [0,1,3] тощо).
+- Max 1 fade-in машина на slot.
+
+**Перед jumping:**
+- Якщо є running машини — встановлюється `pendingJumpStart`, нові running не стартують.
+- Коли всі running закінчують — `startJumpToCoin(0)`.
+
+**Під час jumping:** running машини прискорюються (множник з конфігу).
+
+---
+
+### Загальний флоу
+
+```
+Клік на [data-canvas-init] (main.js)
+    → handleInitClick() → startAnimationChain()
+        → chainActive = true
+        → якщо runningCars.length > 0: pendingJumpStart = true
+        → інакше: startJumpToCoin(0)
+
+startJumpToCoin(0)
+    → char: stay → jumping
+    → char летить по дузі до coin[0]
+
+Char досягає coin[0] (progress >= 1)
+    → setCoinFadeOut(0)
+    → setCharState('stay')
+    → coin[0]: static → fade-out
+
+coinFadeLoop: coin[0] завершив fade-out
+    → coin[0].visible = false
+    → barrier[0]: hide → fade-in
+    → triggerCarFadeIn(0)
+    → якщо chainActive: scheduleNextChainJump(0) → startJumpToCoin(1)
+
+barrierFadeInLoop: barrier[0] завершив fade-in
+    → barrier[0]: fade-in → static
+
+runCarFadeInLoop: fade-in машина доїхала до targetY
+    → car.moving = false, залишається на місці
+```
+
+---
+
+### API
+
+| Метод                 | Опис                                                                 |
+|-----------------------|----------------------------------------------------------------------|
+| `recalcAndRestart()`  | Перерахунок розмірів canvas, перезавантаження ресурсів, перезапуск анімацій. |
+| `handleInitClick()`   | Обробник кліку — викликає startAnimationChain, додає _disabled на кнопку.  |
+| `setCharState(state)` | Встановити char: 'stay' | 'jumping'.                              |
+| `setCoinFadeOut(i)`   | Запустити fade-out для coin[i].                                      |
+| `startAnimationChain()`| Запустити ланцюг стрибків char по коінах.                           |
+
+---
+
 ## fabric-animation-chaining.js
 
 Система послідовного запуску анімацій через зміну CSS-класів.
