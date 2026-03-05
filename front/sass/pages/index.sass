@@ -83,6 +83,7 @@ body
     justify-content: center
     gap: 10px
     margin-top: auto
+    z-index: 3
     &-item
       font-family: $font-supermolot-extrabold-italic
       font-size: 62px
@@ -103,6 +104,7 @@ body
     color: $white
     text-align: center
     margin-top: 25px
+    z-index: 3
   &__left
     position: relative
     flex-shrink: 0
@@ -116,19 +118,11 @@ body
     width: 38%
     background: $blue
     padding: 55px 20px 55px 80px
-  &__canvas
-    position: relative
-    flex: 1
-    min-width: 0
-    display: flex
-    align-items: center
-    justify-content: center
-    overflow: hidden
     &::before
       content: ''
       position: absolute
       top: 0
-      left: -345px
+      right: -75px
       width: 420px
       height: 1780px
       mask-image: url(../img/left-bg-mask-desc.png)
@@ -137,6 +131,14 @@ body
       mask-position: center center
       background: $blue
       z-index: 2
+  &__canvas
+    position: relative
+    flex: 1
+    min-width: 0
+    display: flex
+    align-items: center
+    justify-content: center
+    overflow: hidden
     canvas
       display: block
       position: absolute
@@ -173,6 +175,7 @@ body
     align-items: center
     justify-content: flex-start
     margin-top: 48px
+    z-index: 3
     &-number
       display: flex
       align-items: center
@@ -184,6 +187,7 @@ body
       border-radius: 140px
       background: #3D3D51
       padding: 8px 22px 8px 6px
+      white-space: nowrap
       &::before
         content: ''
         width: 60px
@@ -197,11 +201,11 @@ body
       margin-left: 24px
   &__btn
     position: relative
-    z-index: 2
+    z-index: 3
     margin-top: 48px
   &__logo
     max-width: 300px
-    z-index: 10
+    z-index: 3
 
   z-index: 0
 
@@ -212,7 +216,7 @@ body
   margin: auto auto 25px 0
   flex-shrink: 0
   position: relative
-  z-index: 10
+  z-index: 3
   &__item
     // widths are defined responsively in media.sass
 
@@ -229,7 +233,8 @@ body
   height: 100%
   top: 0
   left: 0
-  background: rgba(0, 0, 0, 0.6)
+  background: rgba(0, 0, 0, 0.7)
+  backdrop-filter: blur(10px)
   z-index: 10
   // display: none
   opacity: 0

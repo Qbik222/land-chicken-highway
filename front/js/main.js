@@ -11,6 +11,22 @@ const debug = true;
 const fadeInPageConfig = getFadeInPageConfig();
 
 function initPage() {
+  if (!chickenCanvasConfig.animationChain) {
+    chickenCanvasConfig.animationChain = {};
+  }
+  chickenCanvasConfig.animationChain.onChainComplete = function () {
+    try {
+      window.scrollTo({ top: 0 });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+    if (document.body) {
+      document.body.style.overflow = 'hidden';
+    }
+    const fadeOutPopupConfig = getFadeOutPopupConfig(null);
+    // initAnimationChaining(fadeOutPopupConfig);
+  };
+
   const chickenCanvas = initChickenCanvas(chickenCanvasConfig);
   if (chickenCanvas) {
     if (typeof chickenCanvas.recalcAndRestart === 'function') {

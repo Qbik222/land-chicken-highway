@@ -14,14 +14,15 @@ export const chickenCanvasConfig = {
   /** Root sizes sorted by width descending. Switch when canvasWidth >= rootWidth + switchThreshold. */
   backgroundBreakpoints: [
     { rootWidth: 1470, rootHeight: 1220, src: './img/canvas/bg.jpg' },
-    { rootWidth: 1046, rootHeight: 666, src: './img/canvas/bg-desc-small.jpg' },
+    { rootWidth: 1080, rootHeight: 850, src: './img/canvas/bg-desc-small.jpg' },
     { rootWidth: 868, rootHeight: 736, src: './img/canvas/bg-tab.jpg' },
     { rootWidth: 536, rootHeight: 455, src: './img/canvas/bg-mob.jpg' },
   ],
   switchThreshold: 50,
   /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. isWrapperFill: true — розмір з wrapper (.land__canvas). */
   canvasBreakpoints: [
-    { maxWidth: 1700, width: 1200, height: 1540 },
+    { maxWidth: 1500, width: 950, height: 1155 },
+    { maxWidth: 1800, width: 1200, height: 1540 },
     { maxWidth: Infinity, width: 1360, height: 1540, isWrapperFill: false },
   ],
   /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
@@ -30,7 +31,10 @@ export const chickenCanvasConfig = {
     width: 225,
     height: 322,
     /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
-    // sizeBreakpoints: [{ maxWidth: 600, width: 200, height: 286 }, ...],
+    sizeBreakpoints: [
+      { maxWidth: 1500, width: 169, height: 242 },
+      { maxWidth: Infinity, width: 225, height: 322 },
+    ],
     /** Затримка між кадрами jumping (ms) */
     jumpFrameDelay: 80,
     frames: [
@@ -56,6 +60,10 @@ export const chickenCanvasConfig = {
     defaultState: 'static',
     width: 134,
     height: 172,
+    breakpoints: [
+      { maxWidth: 1500, width: 101, height: 129 },
+      { maxWidth: Infinity },
+    ],
     imagePath: './img/canvas/coin',
     staticFrame: './img/canvas/coin/static.png',
     frames: [
@@ -65,12 +73,14 @@ export const chickenCanvasConfig = {
     /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
     offsetRightDefault: 70,
     offsetRightBreakpoints: [
-      { maxWidth: 1700, offsetRight: 20 },
+      { maxWidth: 1500, offsetRight: 0 },
+      { maxWidth: 1800, offsetRight: 20 },
       { maxWidth: Infinity, offsetRight: 40 },
     ],
     /** Відстань між коінами (px). viewportWidth <= maxWidth. itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } */
     gapBreakpoints: [
-      { maxWidth: 1700, gapBetween: 30, itemGaps: { 2: { gapBetweenLeft: 40 } } },
+      { maxWidth: 1500, gapBetween: 35, itemGaps: { 2: { gapBetweenLeft: 40 } } },
+      { maxWidth: 1800, gapBetween: 30, itemGaps: { 2: { gapBetweenLeft: 40 } } },
       { maxWidth: Infinity, gapBetween: 70, itemGaps: { 2: { gapBetweenLeft: 50 } } },
     ],
     /** Затримка між кадрами fade-out (ms) */
@@ -83,6 +93,10 @@ export const chickenCanvasConfig = {
     defaultState: 'hide',
     width: 171,
     height: 112,
+    breakpoints: [
+      { maxWidth: 1500, width: 128, height: 84, offsetAbove: 8 },
+      { maxWidth: Infinity },
+    ],
     imagePath: './img/canvas/barrier',
     frames: [
       './img/canvas/barrier/frame-1.png',
@@ -108,6 +122,10 @@ export const chickenCanvasConfig = {
       { width: 168, height: 342, src: './img/canvas/car-1.png' },
       { width: 170, height: 384, src: './img/canvas/car-2.png' },
     ],
+    breakpoints: [
+      { maxWidth: 1500, sizeScale: 0.75, offsetAboveCanvas: 15, stopBeforeBarrier: 15 },
+      { maxWidth: Infinity, sizeScale: 1 },
+    ],
     offsetAboveCanvas: 20,
     runningIntervalMin: 4,
     runningIntervalMax: 10,
@@ -123,6 +141,7 @@ export const chickenCanvasConfig = {
     jumpArcHeight: 60,
     jumpDuration: 600,
     betweenJumpsDelay: 500,
+    popupOpenDelayAfterLastJump: 800,
   },
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
   override: null,

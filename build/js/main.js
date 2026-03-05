@@ -250,9 +250,10 @@ function getMatchedBreakpoint(breakpoints) {
  * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
  */
 function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
-  var _coinsConfig$width, _coinsConfig$height, _getValueFromBreakpoi, _coinsConfig$offsetRi, _gapBp$gapBetween, _coinsConfig$items, _wrapperEl$offsetHeig2;
-  var w = (_coinsConfig$width = coinsConfig.width) !== null && _coinsConfig$width !== void 0 ? _coinsConfig$width : 134;
-  var h = (_coinsConfig$height = coinsConfig.height) !== null && _coinsConfig$height !== void 0 ? _coinsConfig$height : 172;
+  var _ref, _coinsBp$width, _ref2, _coinsBp$height, _getValueFromBreakpoi, _coinsConfig$offsetRi, _gapBp$gapBetween, _coinsConfig$items, _wrapperEl$offsetHeig2;
+  var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+  var w = (_ref = (_coinsBp$width = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width !== void 0 ? _coinsBp$width : coinsConfig.width) !== null && _ref !== void 0 ? _ref : 134;
+  var h = (_ref2 = (_coinsBp$height = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height !== void 0 ? _coinsBp$height : coinsConfig.height) !== null && _ref2 !== void 0 ? _ref2 : 172;
   var offsetRight = (_getValueFromBreakpoi = getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null)) !== null && _getValueFromBreakpoi !== void 0 ? _getValueFromBreakpoi : (_coinsConfig$offsetRi = coinsConfig.offsetRightDefault) !== null && _coinsConfig$offsetRi !== void 0 ? _coinsConfig$offsetRi : 50;
   var gapBp = getMatchedBreakpoint(coinsConfig.gapBreakpoints);
   var gapBetween = (_gapBp$gapBetween = gapBp === null || gapBp === void 0 ? void 0 : gapBp.gapBetween) !== null && _gapBp$gapBetween !== void 0 ? _gapBp$gapBetween : 70;
@@ -261,10 +262,10 @@ function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvas
   var y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
   var leftEdge = charX + (charWidth !== null && charWidth !== void 0 ? charWidth : 225);
   for (var i = 0; i <= index; i++) {
-    var _gapBp$itemGaps, _gapBp$itemGaps2, _ref, _itemGap$gapBetweenLe, _items$i, _ref2, _ref3, _ref4, _itemGap$gapBetweenLe2, _items$i2, _items;
+    var _gapBp$itemGaps, _gapBp$itemGaps2, _ref3, _itemGap$gapBetweenLe, _items$i, _ref4, _ref5, _ref6, _itemGap$gapBetweenLe2, _items$i2, _items;
     var itemGap = gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps = gapBp.itemGaps) === null || _gapBp$itemGaps === void 0 ? void 0 : _gapBp$itemGaps[i];
     var prevItemGap = i > 0 ? gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps2 = gapBp.itemGaps) === null || _gapBp$itemGaps2 === void 0 ? void 0 : _gapBp$itemGaps2[i - 1] : null;
-    var gap = i === 0 ? (_ref = (_itemGap$gapBetweenLe = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe !== void 0 ? _itemGap$gapBetweenLe : (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _ref !== void 0 ? _ref : offsetRight : (_ref2 = (_ref3 = (_ref4 = (_itemGap$gapBetweenLe2 = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe2 !== void 0 ? _itemGap$gapBetweenLe2 : (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _ref4 !== void 0 ? _ref4 : prevItemGap === null || prevItemGap === void 0 ? void 0 : prevItemGap.gapBetweenRight) !== null && _ref3 !== void 0 ? _ref3 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref2 !== void 0 ? _ref2 : gapBetween;
+    var gap = i === 0 ? (_ref3 = (_itemGap$gapBetweenLe = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe !== void 0 ? _itemGap$gapBetweenLe : (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _ref3 !== void 0 ? _ref3 : offsetRight : (_ref4 = (_ref5 = (_ref6 = (_itemGap$gapBetweenLe2 = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe2 !== void 0 ? _itemGap$gapBetweenLe2 : (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _ref6 !== void 0 ? _ref6 : prevItemGap === null || prevItemGap === void 0 ? void 0 : prevItemGap.gapBetweenRight) !== null && _ref5 !== void 0 ? _ref5 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref4 !== void 0 ? _ref4 : gapBetween;
     if (i === index) {
       return {
         x: leftEdge + gap,
@@ -294,10 +295,11 @@ function loadCoinFrames(coinsConfig) {
  * Позиція barrier над coin. barrier[i] центрується над coin[i].
  */
 function getBarrierPositionForViewport(barrierConfig, coinX, coinY, coinWidth) {
-  var _barrierConfig$width, _barrierConfig$height, _getValueFromBreakpoi2, _barrierConfig$offset;
-  var barrierWidth = (_barrierConfig$width = barrierConfig.width) !== null && _barrierConfig$width !== void 0 ? _barrierConfig$width : 171;
-  var barrierHeight = (_barrierConfig$height = barrierConfig.height) !== null && _barrierConfig$height !== void 0 ? _barrierConfig$height : 112;
-  var offsetAbove = (_getValueFromBreakpoi2 = getValueFromBreakpoints(barrierConfig.offsetAboveBreakpoints, 'offsetAbove', null)) !== null && _getValueFromBreakpoi2 !== void 0 ? _getValueFromBreakpoi2 : (_barrierConfig$offset = barrierConfig.offsetAboveDefault) !== null && _barrierConfig$offset !== void 0 ? _barrierConfig$offset : 10;
+  var _ref7, _bp$width, _ref8, _bp$height, _ref9, _bp$offsetAbove, _barrierConfig$offset;
+  var bp = getMatchedBreakpoint(barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.breakpoints);
+  var barrierWidth = (_ref7 = (_bp$width = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width !== void 0 ? _bp$width : barrierConfig.width) !== null && _ref7 !== void 0 ? _ref7 : 171;
+  var barrierHeight = (_ref8 = (_bp$height = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height !== void 0 ? _bp$height : barrierConfig.height) !== null && _ref8 !== void 0 ? _ref8 : 112;
+  var offsetAbove = (_ref9 = (_bp$offsetAbove = bp === null || bp === void 0 ? void 0 : bp.offsetAbove) !== null && _bp$offsetAbove !== void 0 ? _bp$offsetAbove : getValueFromBreakpoints(barrierConfig.offsetAboveBreakpoints, 'offsetAbove', null)) !== null && _ref9 !== void 0 ? _ref9 : (_barrierConfig$offset = barrierConfig.offsetAboveDefault) !== null && _barrierConfig$offset !== void 0 ? _barrierConfig$offset : 10;
   var x = coinX + (coinWidth - barrierWidth) / 2;
   var y = coinY - barrierHeight - offsetAbove;
   return {
@@ -344,13 +346,32 @@ function pickRandomCarVariant(loadedVariants) {
   return loadedVariants[Math.floor(Math.random() * loadedVariants.length)];
 }
 function drawBarrier(ctx, img, barrierConfig, x, y) {
-  ctx.drawImage(img, x, y, barrierConfig.width, barrierConfig.height);
+  var _ref10, _bp$width2, _ref11, _bp$height2;
+  var bp = getMatchedBreakpoint(barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.breakpoints);
+  var width = (_ref10 = (_bp$width2 = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width2 !== void 0 ? _bp$width2 : barrierConfig.width) !== null && _ref10 !== void 0 ? _ref10 : 171;
+  var height = (_ref11 = (_bp$height2 = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height2 !== void 0 ? _bp$height2 : barrierConfig.height) !== null && _ref11 !== void 0 ? _ref11 : 112;
+  ctx.drawImage(img, x, y, width, height);
 }
 function drawCoin(ctx, img, coinsConfig, x, y) {
-  ctx.drawImage(img, x, y, coinsConfig.width, coinsConfig.height);
+  var _ref12, _coinsBp$width2, _ref13, _coinsBp$height2;
+  var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+  var width = (_ref12 = (_coinsBp$width2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width2 !== void 0 ? _coinsBp$width2 : coinsConfig.width) !== null && _ref12 !== void 0 ? _ref12 : 134;
+  var height = (_ref13 = (_coinsBp$height2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height2 !== void 0 ? _coinsBp$height2 : coinsConfig.height) !== null && _ref13 !== void 0 ? _ref13 : 172;
+  ctx.drawImage(img, x, y, width, height);
 }
 function drawCar(ctx, carImg, x, y, width, height) {
   if (carImg) ctx.drawImage(carImg, x, y, width, height);
+}
+function getCarsBreakpoint(carsConfig) {
+  return getMatchedBreakpoint(carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.breakpoints);
+}
+function getCarsConfigValue(carsConfig, key, fallback) {
+  var _ref14, _bp$key2;
+  var bp = getCarsBreakpoint(carsConfig);
+  return (_ref14 = (_bp$key2 = bp === null || bp === void 0 ? void 0 : bp[key]) !== null && _bp$key2 !== void 0 ? _bp$key2 : carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig[key]) !== null && _ref14 !== void 0 ? _ref14 : fallback;
+}
+function getCarsSizeScale(carsConfig) {
+  return getCarsConfigValue(carsConfig, 'sizeScale', 1);
 }
 function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl, overridePosition) {
   var _getCharSize2 = getCharSize(charConfig),
@@ -385,6 +406,7 @@ function createChickenCanvasController(config, elements) {
   var chainTargetX = 0;
   var chainStartTime = 0;
   var chainJumpTimerId = null;
+  var chainCompleteTimerId = null;
   var bgImage = null;
   var currentBgSrc = null;
   var charState = 'stay';
@@ -459,10 +481,12 @@ function createChickenCanvasController(config, elements) {
     return promises.length ? Promise.all(promises) : Promise.resolve();
   }
   function getCoinCenterX(coinIndex) {
-    var _coinsConfig$width2;
+    var _ref15, _coinsBp$width3;
     var charSize = getCharSize(charConfig);
     var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-    return pos.x + ((_coinsConfig$width2 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width2 !== void 0 ? _coinsConfig$width2 : 134) / 2;
+    var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+    var coinWidth = (_ref15 = (_coinsBp$width3 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width3 !== void 0 ? _coinsBp$width3 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref15 !== void 0 ? _ref15 : 134;
+    return pos.x + coinWidth / 2;
   }
   function getCoinCenterAsCharLeft(coinIndex) {
     var charSize = getCharSize(charConfig);
@@ -470,8 +494,8 @@ function createChickenCanvasController(config, elements) {
     return centerX - charSize.width / 2;
   }
   function baseCharXForCoins() {
-    var _x, _ref5, _initialCharPosition;
-    return (_x = (_ref5 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref5 === void 0 ? void 0 : _ref5.x) !== null && _x !== void 0 ? _x : 50;
+    var _x, _ref16, _initialCharPosition;
+    return (_x = (_ref16 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref16 === void 0 ? void 0 : _ref16.x) !== null && _x !== void 0 ? _x : 50;
   }
   function startJumpToCoin(targetIndex) {
     var _charOverridePosition, _currentPos$x, _currentPos$y;
@@ -523,10 +547,23 @@ function createChickenCanvasController(config, elements) {
       if (nextIndex < coinStates.length) {
         startJumpToCoin(nextIndex);
       } else {
+        var _animationChainConfig4;
         chainActive = false;
+        var popupDelay = (_animationChainConfig4 = animationChainConfig === null || animationChainConfig === void 0 ? void 0 : animationChainConfig.popupOpenDelayAfterLastJump) !== null && _animationChainConfig4 !== void 0 ? _animationChainConfig4 : 0;
+        var onChainComplete = animationChainConfig === null || animationChainConfig === void 0 ? void 0 : animationChainConfig.onChainComplete;
+        if (typeof onChainComplete === 'function') {
+          if (popupDelay > 0) {
+            chainCompleteTimerId = window.setTimeout(function () {
+              chainCompleteTimerId = null;
+              onChainComplete();
+            }, popupDelay);
+          } else {
+            onChainComplete();
+          }
+        }
       }
     };
-    if (betweenDelay > 0) {
+    if (betweenDelay > 0 && nextIndex < coinStates.length) {
       chainJumpTimerId = window.setTimeout(schedule, betweenDelay);
     } else {
       schedule();
@@ -536,6 +573,10 @@ function createChickenCanvasController(config, elements) {
     if (chainJumpTimerId != null) {
       clearTimeout(chainJumpTimerId);
       chainJumpTimerId = null;
+    }
+    if (chainCompleteTimerId != null) {
+      clearTimeout(chainCompleteTimerId);
+      chainCompleteTimerId = null;
     }
   }
   function loadBarrierFramesTask() {
@@ -553,22 +594,25 @@ function createChickenCanvasController(config, elements) {
     });
   }
   function getCarPositionX(coinIndex) {
-    var _coinsConfig$width3;
+    var _ref17, _coinsBp$width4;
     var charSize = getCharSize(charConfig);
     var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-    return pos.x + ((_coinsConfig$width3 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width3 !== void 0 ? _coinsConfig$width3 : 134) / 2;
+    var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+    var coinWidth = (_ref17 = (_coinsBp$width4 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width4 !== void 0 ? _coinsBp$width4 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref17 !== void 0 ? _ref17 : 134;
+    return pos.x + coinWidth / 2;
   }
   function getCarStartY(carHeight) {
-    var _carsConfig$offsetAbo;
-    var offset = (_carsConfig$offsetAbo = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.offsetAboveCanvas) !== null && _carsConfig$offsetAbo !== void 0 ? _carsConfig$offsetAbo : 20;
+    var offset = getCarsConfigValue(carsConfig, 'offsetAboveCanvas', 20);
     return -carHeight - offset;
   }
   function getCarFadeInTargetY(coinIndex, carHeight) {
-    var _coinsConfig$width4, _carsConfig$stopBefor;
+    var _ref18, _coinsBp$width5;
     var coinPos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), getCharSize(charConfig).width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-    var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width4 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width4 !== void 0 ? _coinsConfig$width4 : 134),
+    var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+    var coinWidth = (_ref18 = (_coinsBp$width5 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width5 !== void 0 ? _coinsBp$width5 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref18 !== void 0 ? _ref18 : 134;
+    var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, coinWidth),
       barrierY = _getBarrierPositionFo.y;
-    var stopBefore = (_carsConfig$stopBefor = carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.stopBeforeBarrier) !== null && _carsConfig$stopBefor !== void 0 ? _carsConfig$stopBefor : 20;
+    var stopBefore = getCarsConfigValue(carsConfig, 'stopBeforeBarrier', 20);
     return barrierY - carHeight - stopBefore;
   }
   function randomBetween(min, max) {
@@ -605,7 +649,12 @@ function createChickenCanvasController(config, elements) {
       scheduleNextCarDrive(coinIndex);
       return;
     }
-    var variant = pickRandomCarVariant(carVariantImages);
+    var baseVariant = pickRandomCarVariant(carVariantImages);
+    var scale = getCarsSizeScale(carsConfig);
+    var variant = baseVariant ? _objectSpread2(_objectSpread2({}, baseVariant), {}, {
+      width: Math.round(baseVariant.width * scale),
+      height: Math.round(baseVariant.height * scale)
+    }) : null;
     if (!variant) return;
     var centerX = getCarPositionX(coinIndex);
     var x = centerX - variant.width / 2;
@@ -702,7 +751,12 @@ function createChickenCanvasController(config, elements) {
     if (fadeInCars.some(function (c) {
       return c.coinIndex === coinIndex;
     })) return;
-    var variant = pickRandomCarVariant(carVariantImages);
+    var baseVariant = pickRandomCarVariant(carVariantImages);
+    var scale = getCarsSizeScale(carsConfig);
+    var variant = baseVariant ? _objectSpread2(_objectSpread2({}, baseVariant), {}, {
+      width: Math.round(baseVariant.width * scale),
+      height: Math.round(baseVariant.height * scale)
+    }) : null;
     if (!variant) return;
     var centerX = getCarPositionX(coinIndex);
     var x = centerX - variant.width / 2;
@@ -755,14 +809,14 @@ function createChickenCanvasController(config, elements) {
     }
   }
   function drawFullFrame() {
-    var _x2, _ref6, _initialCharPosition2;
+    var _x2, _ref19, _initialCharPosition2;
     var ctx = canvasEl.getContext('2d');
     if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
     var charSize = charConfig ? getCharSize(charConfig) : {
       width: 225};
     var charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
-    var baseCharX = (_x2 = (_ref6 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref6 === void 0 ? void 0 : _ref6.x) !== null && _x2 !== void 0 ? _x2 : 50;
+    var baseCharX = (_x2 = (_ref19 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref19 === void 0 ? void 0 : _ref19.x) !== null && _x2 !== void 0 ? _x2 : 50;
     if (coinsConfig && (coinStaticImage || coinFrameImages.length > 0)) {
       coinStates.forEach(function (coin, index) {
         var _coinStaticImage;
@@ -786,10 +840,12 @@ function createChickenCanvasController(config, elements) {
     }
     if (barrierConfig && coinsConfig && barrierFrameImages.length > 0) {
       barrierStates.forEach(function (barrier, index) {
-        var _coinsConfig$width5, _barrierConfig$static;
+        var _ref20, _coinsBp$width6, _barrierConfig$static;
         if (!barrier.visible) return;
         var coinPos = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl);
-        var _getBarrierPositionFo2 = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, (_coinsConfig$width5 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _coinsConfig$width5 !== void 0 ? _coinsConfig$width5 : 134),
+        var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
+        var coinWidth = (_ref20 = (_coinsBp$width6 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width6 !== void 0 ? _coinsBp$width6 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref20 !== void 0 ? _ref20 : 134;
+        var _getBarrierPositionFo2 = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, coinWidth),
           x = _getBarrierPositionFo2.x,
           y = _getBarrierPositionFo2.y;
         var frameIdx = barrier.state === 'static' ? (_barrierConfig$static = barrierConfig.staticFrameIndex) !== null && _barrierConfig$static !== void 0 ? _barrierConfig$static : 5 : barrier.frameIndex % barrierFrameImages.length;
@@ -1062,7 +1118,7 @@ function createChickenCanvasController(config, elements) {
 
 function initChickenCanvas(config) {
   if (!config) return null;
-  var effectiveConfig = config;
+  var effectiveConfig = config.override ? _objectSpread2(_objectSpread2({}, config), config.override) : config;
   var selectors = effectiveConfig.selectors;
   var wrapperEl = document.querySelector(selectors.wrapper);
   var landLeftEl = document.querySelector(selectors.landLeft);
@@ -1103,8 +1159,8 @@ var chickenCanvasConfig = {
     rootHeight: 1220,
     src: './img/canvas/bg.jpg'
   }, {
-    rootWidth: 1046,
-    rootHeight: 666,
+    rootWidth: 1080,
+    rootHeight: 850,
     src: './img/canvas/bg-desc-small.jpg'
   }, {
     rootWidth: 868,
@@ -1118,7 +1174,11 @@ var chickenCanvasConfig = {
   switchThreshold: 50,
   /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. isWrapperFill: true — розмір з wrapper (.land__canvas). */
   canvasBreakpoints: [{
-    maxWidth: 1700,
+    maxWidth: 1500,
+    width: 950,
+    height: 1155
+  }, {
+    maxWidth: 1800,
     width: 1200,
     height: 1540
   }, {
@@ -1133,7 +1193,15 @@ var chickenCanvasConfig = {
     width: 225,
     height: 322,
     /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
-    // sizeBreakpoints: [{ maxWidth: 600, width: 200, height: 286 }, ...],
+    sizeBreakpoints: [{
+      maxWidth: 1500,
+      width: 169,
+      height: 242
+    }, {
+      maxWidth: Infinity,
+      width: 225,
+      height: 322
+    }],
     /** Затримка між кадрами jumping (ms) */
     jumpFrameDelay: 80,
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
@@ -1151,13 +1219,23 @@ var chickenCanvasConfig = {
     defaultState: 'static',
     width: 134,
     height: 172,
+    breakpoints: [{
+      maxWidth: 1500,
+      width: 101,
+      height: 129
+    }, {
+      maxWidth: Infinity
+    }],
     imagePath: './img/canvas/coin',
     staticFrame: './img/canvas/coin/static.png',
     frames: ['./img/canvas/coin/frame-1.png', './img/canvas/coin/frame-2.png'],
     /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
     offsetRightDefault: 70,
     offsetRightBreakpoints: [{
-      maxWidth: 1700,
+      maxWidth: 1500,
+      offsetRight: 0
+    }, {
+      maxWidth: 1800,
       offsetRight: 20
     }, {
       maxWidth: Infinity,
@@ -1165,7 +1243,15 @@ var chickenCanvasConfig = {
     }],
     /** Відстань між коінами (px). viewportWidth <= maxWidth. itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } */
     gapBreakpoints: [{
-      maxWidth: 1700,
+      maxWidth: 1500,
+      gapBetween: 35,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 40
+        }
+      }
+    }, {
+      maxWidth: 1800,
       gapBetween: 30,
       itemGaps: {
         2: {
@@ -1199,6 +1285,14 @@ var chickenCanvasConfig = {
     defaultState: 'hide',
     width: 171,
     height: 112,
+    breakpoints: [{
+      maxWidth: 1500,
+      width: 128,
+      height: 84,
+      offsetAbove: 8
+    }, {
+      maxWidth: Infinity
+    }],
     imagePath: './img/canvas/barrier',
     frames: ['./img/canvas/barrier/frame-1.png', './img/canvas/barrier/frame-2.png', './img/canvas/barrier/frame-3.png', './img/canvas/barrier/frame-4.png', './img/canvas/barrier/frame-5.png', './img/canvas/barrier/frame-6.png'],
     staticFrameIndex: 5,
@@ -1235,6 +1329,15 @@ var chickenCanvasConfig = {
       height: 384,
       src: './img/canvas/car-2.png'
     }],
+    breakpoints: [{
+      maxWidth: 1500,
+      sizeScale: 0.75,
+      offsetAboveCanvas: 15,
+      stopBeforeBarrier: 15
+    }, {
+      maxWidth: Infinity,
+      sizeScale: 1
+    }],
     offsetAboveCanvas: 20,
     runningIntervalMin: 4,
     runningIntervalMax: 10,
@@ -1249,8 +1352,17 @@ var chickenCanvasConfig = {
   animationChain: {
     jumpArcHeight: 60,
     jumpDuration: 600,
-    betweenJumpsDelay: 500
-  }};
+    betweenJumpsDelay: 500,
+    popupOpenDelayAfterLastJump: 800
+  },
+  /** Override for testing: pass custom breakpoints/root to force a specific background. */
+  override: null
+};
+var textAnimationConfig = {
+  wrapOrder: ['.land__text-item._first', '.land__text-item._second', '.land__text-item._third'],
+  beforeShowBottomDelay: 500,
+  showDuration: 200
+};
 
 /**
  * Утиліти та бізнес-логіка сторінки.
@@ -1261,6 +1373,44 @@ function setPopupAnimationToggler() {
   if (popupBtn) popupBtn.style.pointerEvents = 'initial';
   var animLayerEl = document.querySelector('.land__anim-layer');
   if (animLayerEl) animLayerEl.classList.add('_fade-in-btn');
+}
+function buildTextAnimationSteps(config) {
+  var cfg = textAnimationConfig;
+  var steps = [];
+  var animationName = 'toggleAnimation';
+  cfg.wrapOrder.forEach(function (wrapSelector) {
+    var wrap = document.querySelector(wrapSelector);
+    if (!wrap) return;
+    var topEl = wrap.querySelector('._anim-text-top');
+    var bottomEl = wrap.querySelector('._anim-text-bottom');
+    if (!topEl || !bottomEl) return;
+    steps.push({
+      animation: animationName,
+      el: topEl,
+      addClass: '_fade-in',
+      removeClass: '_fade-out',
+      delay: 100
+    }, {
+      animation: animationName,
+      el: bottomEl,
+      addClass: '_fade-in',
+      removeClass: '_fade-out',
+      delay: cfg.beforeShowBottomDelay
+    }, {
+      animation: animationName,
+      el: topEl,
+      addClass: '_fade-out',
+      removeClass: '_fade-in',
+      delay: cfg.showDuration
+    }, {
+      animation: animationName,
+      el: bottomEl,
+      addClass: '_fade-out',
+      removeClass: '_fade-in',
+      delay: cfg.showDuration
+    });
+  });
+  return steps;
 }
 function getFadeInPageConfig() {
   var yourEl = document.querySelector('.land__title-your');
@@ -1323,10 +1473,141 @@ function getFadeInPageConfig() {
     })
   };
 }
+function getFadeOutPopupConfig(btn) {
+  var fadeInClass = '_fade-in';
+  var fadeOutClass = '_fade-out';
+  var animationName = 'toggleAnimation';
+  var titleYourEl = document.querySelector('.land__title-your');
+  var firstTitleEl = document.querySelector('.land__title-animated-item._first');
+  var secondTitleEl = document.querySelector('.land__title-animated-item._second');
+  var thirdTitleEl = document.querySelector('.land__title-animated-item._third');
+  var animLayerEl = document.querySelector('.land__anim-layer');
+  var popupEl = document.querySelector('.popup');
+  var landTextEl = document.querySelector('.land__text');
+  var steps = [{
+    animation: animationName,
+    el: titleYourEl,
+    addClass: fadeOutClass,
+    removeClass: fadeInClass,
+    delay: 0,
+    callback: function callback() {
+    }
+  }, {
+    animation: animationName,
+    el: firstTitleEl,
+    addClass: fadeOutClass,
+    removeClass: fadeInClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: secondTitleEl,
+    addClass: fadeOutClass,
+    removeClass: fadeInClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: thirdTitleEl,
+    addClass: "",
+    removeClass: fadeInClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: animLayerEl,
+    addClass: fadeOutClass,
+    removeClass: fadeInClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: landTextEl,
+    addClass: '',
+    removeClass: '',
+    delay: 600
+  }];
+  steps.push.apply(steps, buildTextAnimationSteps());
+  var popupTitleEl = document.querySelector('.popup__title');
+  var popupTextTopEl = document.querySelector('.popup__text ._anim-text-top');
+  var popupTextBottomEl = document.querySelector('.popup__text ._anim-text-bottom');
+  var popupBtnEl = document.querySelector('.popup__btn');
+  var globalLinkEl = document.querySelector('.global-link');
+  steps.push({
+    animation: animationName,
+    el: popupEl,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
+    delay: 500
+  }, {
+    animation: animationName,
+    el: popupTitleEl,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: popupTextTopEl,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: popupTextBottomEl,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
+    delay: 0
+  }, {
+    animation: animationName,
+    el: globalLinkEl,
+    addClass: '_fade-in',
+    removeClass: '',
+    delay: 0
+  }, {
+    animation: animationName,
+    el: popupBtnEl,
+    addClass: '_anim-btn-scale',
+    removeClass: '',
+    delay: 700
+  }, {
+    animation: animationName,
+    el: popupTextTopEl,
+    addClass: '_anim-text-popup',
+    removeClass: '',
+    delay: 0
+  }, {
+    animation: animationName,
+    el: popupTextBottomEl,
+    addClass: '_anim-text-popup',
+    removeClass: '',
+    delay: 0
+  });
+  return {
+    beforeStartDelay: 0,
+    steps: steps,
+    delays: steps.map(function (s) {
+      return s.delay;
+    })
+  };
+}
 
 // ——— Init & entry point —————————————————————————————————————————————————————
 getFadeInPageConfig();
 function initPage() {
+  if (!chickenCanvasConfig.animationChain) {
+    chickenCanvasConfig.animationChain = {};
+  }
+  chickenCanvasConfig.animationChain.onChainComplete = function () {
+    try {
+      window.scrollTo({
+        top: 0
+      });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+    if (document.body) {
+      document.body.style.overflow = 'hidden';
+    }
+    getFadeOutPopupConfig();
+    // initAnimationChaining(fadeOutPopupConfig);
+  };
+
   var chickenCanvas = initChickenCanvas(chickenCanvasConfig);
   if (chickenCanvas) {
     if (typeof chickenCanvas.recalcAndRestart === 'function') {

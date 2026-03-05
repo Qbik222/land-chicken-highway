@@ -135,8 +135,9 @@ export function getMatchedBreakpoint(breakpoints) {
  * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
  */
 export function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
-  const w = coinsConfig.width ?? 134;
-  const h = coinsConfig.height ?? 172;
+  const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+  const w = coinsBp?.width ?? coinsConfig.width ?? 134;
+  const h = coinsBp?.height ?? coinsConfig.height ?? 172;
   const offsetRight =
     getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null) ??
     (coinsConfig.offsetRightDefault ?? 50);
@@ -173,9 +174,11 @@ export function loadCoinFrames(coinsConfig) {
  * Позиція barrier над coin. barrier[i] центрується над coin[i].
  */
 export function getBarrierPositionForViewport(barrierConfig, coinX, coinY, coinWidth) {
-  const barrierWidth = barrierConfig.width ?? 171;
-  const barrierHeight = barrierConfig.height ?? 112;
+  const bp = getMatchedBreakpoint(barrierConfig?.breakpoints);
+  const barrierWidth = bp?.width ?? barrierConfig.width ?? 171;
+  const barrierHeight = bp?.height ?? barrierConfig.height ?? 112;
   const offsetAbove =
+    bp?.offsetAbove ??
     getValueFromBreakpoints(barrierConfig.offsetAboveBreakpoints, 'offsetAbove', null) ??
     (barrierConfig.offsetAboveDefault ?? 10);
   const x = coinX + (coinWidth - barrierWidth) / 2;
@@ -215,15 +218,34 @@ function pickRandomCarVariant(loadedVariants) {
 }
 
 function drawBarrier(ctx, img, barrierConfig, x, y) {
-  ctx.drawImage(img, x, y, barrierConfig.width, barrierConfig.height);
+  const bp = getMatchedBreakpoint(barrierConfig?.breakpoints);
+  const width = bp?.width ?? barrierConfig.width ?? 171;
+  const height = bp?.height ?? barrierConfig.height ?? 112;
+  ctx.drawImage(img, x, y, width, height);
 }
 
 function drawCoin(ctx, img, coinsConfig, x, y) {
-  ctx.drawImage(img, x, y, coinsConfig.width, coinsConfig.height);
+  const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+  const width = coinsBp?.width ?? coinsConfig.width ?? 134;
+  const height = coinsBp?.height ?? coinsConfig.height ?? 172;
+  ctx.drawImage(img, x, y, width, height);
 }
 
 function drawCar(ctx, carImg, x, y, width, height) {
   if (carImg) ctx.drawImage(carImg, x, y, width, height);
+}
+
+function getCarsBreakpoint(carsConfig) {
+  return getMatchedBreakpoint(carsConfig?.breakpoints);
+}
+
+function getCarsConfigValue(carsConfig, key, fallback) {
+  const bp = getCarsBreakpoint(carsConfig);
+  return bp?.[key] ?? carsConfig?.[key] ?? fallback;
+}
+
+function getCarsSizeScale(carsConfig) {
+  return getCarsConfigValue(carsConfig, 'sizeScale', 1);
 }
 
 function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl, overridePosition) {
@@ -260,6 +282,7 @@ export function createChickenCanvasController(config, elements) {
   let chainTargetX = 0;
   let chainStartTime = 0;
   let chainJumpTimerId = null;
+  let chainCompleteTimerId = null;
   let bgImage = null;
   let currentBgSrc = null;
 
@@ -333,7 +356,9 @@ export function createChickenCanvasController(config, elements) {
       coinsConfig, baseCharXForCoins(), charSize.width, coinIndex,
       lastCanvasWidth, lastCanvasHeight, wrapperEl
     );
-    return pos.x + (coinsConfig?.width ?? 134) / 2;
+    const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+    const coinWidth = coinsBp?.width ?? coinsConfig?.width ?? 134;
+    return pos.x + coinWidth / 2;
   }
 
   function getCoinCenterAsCharLeft(coinIndex) {
@@ -390,9 +415,21 @@ export function createChickenCanvasController(config, elements) {
         startJumpToCoin(nextIndex);
       } else {
         chainActive = false;
+        const popupDelay = animationChainConfig?.popupOpenDelayAfterLastJump ?? 0;
+        const onChainComplete = animationChainConfig?.onChainComplete;
+        if (typeof onChainComplete === 'function') {
+          if (popupDelay > 0) {
+            chainCompleteTimerId = window.setTimeout(() => {
+              chainCompleteTimerId = null;
+              onChainComplete();
+            }, popupDelay);
+          } else {
+            onChainComplete();
+          }
+        }
       }
     };
-    if (betweenDelay > 0) {
+    if (betweenDelay > 0 && nextIndex < coinStates.length) {
       chainJumpTimerId = window.setTimeout(schedule, betweenDelay);
     } else {
       schedule();
@@ -403,6 +440,10 @@ export function createChickenCanvasController(config, elements) {
     if (chainJumpTimerId != null) {
       clearTimeout(chainJumpTimerId);
       chainJumpTimerId = null;
+    }
+    if (chainCompleteTimerId != null) {
+      clearTimeout(chainCompleteTimerId);
+      chainCompleteTimerId = null;
     }
   }
 
@@ -426,11 +467,13 @@ export function createChickenCanvasController(config, elements) {
       coinsConfig, baseCharXForCoins(), charSize.width, coinIndex,
       lastCanvasWidth, lastCanvasHeight, wrapperEl
     );
-    return pos.x + (coinsConfig?.width ?? 134) / 2;
+    const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+    const coinWidth = coinsBp?.width ?? coinsConfig?.width ?? 134;
+    return pos.x + coinWidth / 2;
   }
 
   function getCarStartY(carHeight) {
-    const offset = carsConfig?.offsetAboveCanvas ?? 20;
+    const offset = getCarsConfigValue(carsConfig, 'offsetAboveCanvas', 20);
     return -carHeight - offset;
   }
 
@@ -439,10 +482,12 @@ export function createChickenCanvasController(config, elements) {
       coinsConfig, baseCharXForCoins(), getCharSize(charConfig).width, coinIndex,
       lastCanvasWidth, lastCanvasHeight, wrapperEl
     );
+    const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+    const coinWidth = coinsBp?.width ?? coinsConfig?.width ?? 134;
     const { y: barrierY } = getBarrierPositionForViewport(
-      barrierConfig, coinPos.x, coinPos.y, coinsConfig?.width ?? 134
+      barrierConfig, coinPos.x, coinPos.y, coinWidth
     );
-    const stopBefore = carsConfig?.stopBeforeBarrier ?? 20;
+    const stopBefore = getCarsConfigValue(carsConfig, 'stopBeforeBarrier', 20);
     return barrierY - carHeight - stopBefore;
   }
 
@@ -477,7 +522,11 @@ export function createChickenCanvasController(config, elements) {
       return;
     }
 
-    const variant = pickRandomCarVariant(carVariantImages);
+    const baseVariant = pickRandomCarVariant(carVariantImages);
+    const scale = getCarsSizeScale(carsConfig);
+    const variant = baseVariant
+      ? { ...baseVariant, width: Math.round(baseVariant.width * scale), height: Math.round(baseVariant.height * scale) }
+      : null;
     if (!variant) return;
 
     const centerX = getCarPositionX(coinIndex);
@@ -573,7 +622,11 @@ export function createChickenCanvasController(config, elements) {
     if (chainActive && chainFadeInCombo && !chainFadeInCombo.has(coinIndex)) return;
     if (fadeInCars.some((c) => c.coinIndex === coinIndex)) return;
 
-    const variant = pickRandomCarVariant(carVariantImages);
+    const baseVariant = pickRandomCarVariant(carVariantImages);
+    const scale = getCarsSizeScale(carsConfig);
+    const variant = baseVariant
+      ? { ...baseVariant, width: Math.round(baseVariant.width * scale), height: Math.round(baseVariant.height * scale) }
+      : null;
     if (!variant) return;
 
     const centerX = getCarPositionX(coinIndex);
@@ -673,8 +726,10 @@ export function createChickenCanvasController(config, elements) {
         const coinPos = getCoinPositionForViewport(
           coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl
         );
+        const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
+        const coinWidth = coinsBp?.width ?? coinsConfig?.width ?? 134;
         const { x, y } = getBarrierPositionForViewport(
-          barrierConfig, coinPos.x, coinPos.y, coinsConfig?.width ?? 134
+          barrierConfig, coinPos.x, coinPos.y, coinWidth
         );
         const frameIdx = barrier.state === 'static'
           ? (barrierConfig.staticFrameIndex ?? 5)
