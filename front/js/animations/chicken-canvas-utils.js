@@ -234,6 +234,10 @@ function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl
 
 export function createChickenCanvasController(config, elements) {
   const { wrapperEl, canvasEl, initBtnEl } = elements;
+  const counterEl = config.selectors?.counterNumber
+    ? document.querySelector(config.selectors.counterNumber)
+    : null;
+  const initBtnDisabledClass = config.selectors?.initBtnDisabledClass ?? '_disabled';
   const {
     backgroundBreakpoints,
     switchThreshold = 50,
@@ -293,6 +297,12 @@ export function createChickenCanvasController(config, elements) {
   let chainFadeInCombo = null;
   let carRunningRafId = null;
   const carDriveScheduleTimers = [];
+
+  function updateCounter(collected) {
+    if (!counterEl) return;
+    const total = coinStates.length;
+    counterEl.textContent = `${collected} / ${total}`;
+  }
 
   function loadCharFrames() {
     if (!charConfig?.frames?.length) return Promise.resolve();
@@ -756,6 +766,7 @@ export function createChickenCanvasController(config, elements) {
     if (!coin.visible || coin.state === 'fade-out') return;
     coin.state = 'fade-out';
     coin.frameIndex = 0;
+    updateCounter(coinIndex + 1);
     if (coinFadeTimerId == null) {
       const delay = coinsConfig?.fadeFrameDelay ?? 60;
       coinFadeTimerId = window.setTimeout(coinFadeLoop, delay);
@@ -812,6 +823,21 @@ export function createChickenCanvasController(config, elements) {
     chainActive = false;
     charOverridePosition = null;
     initialCharPosition = null;
+    updateCounter(0);
+    const coinDefaultState = coinsConfig?.defaultState ?? 'static';
+    const barrierDefaultState = barrierConfig?.defaultState ?? 'hide';
+    charState = charConfig?.defaultState ?? 'stay';
+    coinStates.forEach((c) => {
+      c.state = coinDefaultState;
+      c.frameIndex = 0;
+      c.visible = true;
+    });
+    barrierStates.forEach((b) => {
+      b.state = barrierDefaultState;
+      b.frameIndex = 0;
+      b.visible = false;
+    });
+    initBtnEl?.classList.remove(initBtnDisabledClass);
     const { width, height } = getCanvasDimensionsFromBreakpoints(canvasBreakpoints, wrapperEl);
     if (width <= 0 || height <= 0) return;
 
@@ -874,7 +900,7 @@ export function createChickenCanvasController(config, elements) {
 
   function handleInitClick() {
     startAnimationChain();
-    this.classList.add('_disabled');
+    this.classList.add(initBtnDisabledClass);
   }
 
   function startAnimationChain() {
@@ -887,6 +913,7 @@ export function createChickenCanvasController(config, elements) {
     initialCharPosition = getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     charOverridePosition = { ...initialCharPosition };
     chainActive = true;
+    updateCounter(0);
 
     if (carsConfig && runningCars.length > 0) {
       pendingJumpStart = true;

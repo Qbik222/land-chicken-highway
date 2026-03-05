@@ -8,6 +8,8 @@ export const chickenCanvasConfig = {
     landLeft: '.land__left',
     canvas: '[data-canvas="chicken"]',
     initBtn: '[data-canvas-init="chicken"]',
+    initBtnDisabledClass: '_disabled',
+    counterNumber: '.land__counter-number',
   },
   /** Root sizes sorted by width descending. Switch when canvasWidth >= rootWidth + switchThreshold. */
   backgroundBreakpoints: [
@@ -24,6 +26,7 @@ export const chickenCanvasConfig = {
   ],
   /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
   char: {
+    defaultState: 'stay',
     width: 225,
     height: 322,
     /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
@@ -50,6 +53,7 @@ export const chickenCanvasConfig = {
   },
   /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. static — static.png з папки. */
   coins: {
+    defaultState: 'static',
     width: 134,
     height: 172,
     imagePath: './img/canvas/coin',
@@ -76,6 +80,7 @@ export const chickenCanvasConfig = {
   },
   /** Barrier — 171×112px, прив'язка до coin[i]. Стани hide | fade-in | static. */
   barrier: {
+    defaultState: 'hide',
     width: 171,
     height: 112,
     imagePath: './img/canvas/barrier',

@@ -360,9 +360,12 @@ function drawChar(ctx, charImg, charConfig, canvasWidth, canvasHeight, wrapperEl
   ctx.drawImage(charImg, pos.x, pos.y, width, height);
 }
 function createChickenCanvasController(config, elements) {
-  var _charConfig$frames2, _coinsConfig$frames4, _barrierConfig$frames5, _carsConfig$variants3;
+  var _config$selectors, _config$selectors$ini, _config$selectors2, _charConfig$frames2, _coinsConfig$frames4, _barrierConfig$frames5, _carsConfig$variants3;
   var wrapperEl = elements.wrapperEl,
-    canvasEl = elements.canvasEl;
+    canvasEl = elements.canvasEl,
+    initBtnEl = elements.initBtnEl;
+  var counterEl = (_config$selectors = config.selectors) !== null && _config$selectors !== void 0 && _config$selectors.counterNumber ? document.querySelector(config.selectors.counterNumber) : null;
+  var initBtnDisabledClass = (_config$selectors$ini = (_config$selectors2 = config.selectors) === null || _config$selectors2 === void 0 ? void 0 : _config$selectors2.initBtnDisabledClass) !== null && _config$selectors$ini !== void 0 ? _config$selectors$ini : '_disabled';
   var backgroundBreakpoints = config.backgroundBreakpoints,
     _config$switchThresho = config.switchThreshold,
     switchThreshold = _config$switchThresho === void 0 ? 50 : _config$switchThresho,
@@ -423,6 +426,11 @@ function createChickenCanvasController(config, elements) {
   var chainFadeInCombo = null;
   var carRunningRafId = null;
   var carDriveScheduleTimers = [];
+  function updateCounter(collected) {
+    if (!counterEl) return;
+    var total = coinStates.length;
+    counterEl.textContent = "".concat(collected, " / ").concat(total);
+  }
   function loadCharFrames() {
     var _charConfig$frames;
     if (!(charConfig !== null && charConfig !== void 0 && (_charConfig$frames = charConfig.frames) !== null && _charConfig$frames !== void 0 && _charConfig$frames.length)) return Promise.resolve();
@@ -877,6 +885,7 @@ function createChickenCanvasController(config, elements) {
     if (!coin.visible || coin.state === 'fade-out') return;
     coin.state = 'fade-out';
     coin.frameIndex = 0;
+    updateCounter(coinIndex + 1);
     if (coinFadeTimerId == null) {
       var _coinsConfig$fadeFram2;
       var delay = (_coinsConfig$fadeFram2 = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.fadeFrameDelay) !== null && _coinsConfig$fadeFram2 !== void 0 ? _coinsConfig$fadeFram2 : 60;
@@ -913,6 +922,7 @@ function createChickenCanvasController(config, elements) {
     }
   }
   function recalcAndRestart() {
+    var _coinsConfig$defaultS, _barrierConfig$defaul, _charConfig$defaultSt;
     stopJumpingLoop();
     stopCoinFadeLoop();
     stopBarrierFadeInLoop();
@@ -933,6 +943,21 @@ function createChickenCanvasController(config, elements) {
     chainActive = false;
     charOverridePosition = null;
     initialCharPosition = null;
+    updateCounter(0);
+    var coinDefaultState = (_coinsConfig$defaultS = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.defaultState) !== null && _coinsConfig$defaultS !== void 0 ? _coinsConfig$defaultS : 'static';
+    var barrierDefaultState = (_barrierConfig$defaul = barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.defaultState) !== null && _barrierConfig$defaul !== void 0 ? _barrierConfig$defaul : 'hide';
+    charState = (_charConfig$defaultSt = charConfig === null || charConfig === void 0 ? void 0 : charConfig.defaultState) !== null && _charConfig$defaultSt !== void 0 ? _charConfig$defaultSt : 'stay';
+    coinStates.forEach(function (c) {
+      c.state = coinDefaultState;
+      c.frameIndex = 0;
+      c.visible = true;
+    });
+    barrierStates.forEach(function (b) {
+      b.state = barrierDefaultState;
+      b.frameIndex = 0;
+      b.visible = false;
+    });
+    initBtnEl === null || initBtnEl === void 0 ? void 0 : initBtnEl.classList.remove(initBtnDisabledClass);
     var _getCanvasDimensionsF = getCanvasDimensionsFromBreakpoints(canvasBreakpoints, wrapperEl),
       width = _getCanvasDimensionsF.width,
       height = _getCanvasDimensionsF.height;
@@ -997,7 +1022,7 @@ function createChickenCanvasController(config, elements) {
   }
   function handleInitClick() {
     startAnimationChain();
-    this.classList.add('_disabled');
+    this.classList.add(initBtnDisabledClass);
   }
   function startAnimationChain() {
     if (!charConfig || !coinsConfig || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
@@ -1007,6 +1032,7 @@ function createChickenCanvasController(config, elements) {
     initialCharPosition = getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     charOverridePosition = _objectSpread2({}, initialCharPosition);
     chainActive = true;
+    updateCounter(0);
     if (carsConfig && runningCars.length > 0) {
       pendingJumpStart = true;
     } else {
@@ -1041,11 +1067,13 @@ function initChickenCanvas(config) {
   var wrapperEl = document.querySelector(selectors.wrapper);
   var landLeftEl = document.querySelector(selectors.landLeft);
   var canvasEl = document.querySelector(selectors.canvas);
-  document.querySelector(selectors.initBtn);
+  var initBtnEl = document.querySelector(selectors.initBtn);
   if (!wrapperEl || !landLeftEl || !canvasEl) return null;
   var controller = createChickenCanvasController(effectiveConfig, {
     wrapperEl: wrapperEl,
-    canvasEl: canvasEl});
+    canvasEl: canvasEl,
+    initBtnEl: initBtnEl
+  });
   controller.recalcAndRestart();
   return {
     recalcAndRestart: controller.recalcAndRestart,
@@ -1065,7 +1093,9 @@ var chickenCanvasConfig = {
     wrapper: '.land__canvas',
     landLeft: '.land__left',
     canvas: '[data-canvas="chicken"]',
-    initBtn: '[data-canvas-init="chicken"]'
+    initBtn: '[data-canvas-init="chicken"]',
+    initBtnDisabledClass: '_disabled',
+    counterNumber: '.land__counter-number'
   },
   /** Root sizes sorted by width descending. Switch when canvasWidth >= rootWidth + switchThreshold. */
   backgroundBreakpoints: [{
@@ -1099,6 +1129,7 @@ var chickenCanvasConfig = {
   }],
   /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
   char: {
+    defaultState: 'stay',
     width: 225,
     height: 322,
     /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
@@ -1117,6 +1148,7 @@ var chickenCanvasConfig = {
   },
   /** Coins — 134×172px, стани static | fade-out. В ряд відносно char. static — static.png з папки. */
   coins: {
+    defaultState: 'static',
     width: 134,
     height: 172,
     imagePath: './img/canvas/coin',
@@ -1164,6 +1196,7 @@ var chickenCanvasConfig = {
   },
   /** Barrier — 171×112px, прив'язка до coin[i]. Стани hide | fade-in | static. */
   barrier: {
+    defaultState: 'hide',
     width: 171,
     height: 112,
     imagePath: './img/canvas/barrier',
