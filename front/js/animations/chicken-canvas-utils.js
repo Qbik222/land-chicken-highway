@@ -289,6 +289,7 @@ export function createChickenCanvasController(config, elements) {
   let fadeInCars = [];
   const carSlotStates = (coinsConfig?.items || []).map(() => ({ lastDriveEndTime: 0 }));
   let pendingJumpStart = false;
+  let pendingJumpForCoinIndex = null;
   let chainFadeInCombo = null;
   let carRunningRafId = null;
   const carDriveScheduleTimers = [];
@@ -337,6 +338,13 @@ export function createChickenCanvasController(config, elements) {
 
   function startJumpToCoin(targetIndex) {
     if (targetIndex < 0 || targetIndex >= coinStates.length) return;
+
+    if (carsConfig && runningCars.some((c) => c.coinIndex === targetIndex)) {
+      pendingJumpForCoinIndex = targetIndex;
+      return;
+    }
+    pendingJumpForCoinIndex = null;
+
     chainTargetCoinIndex = targetIndex;
     const currentPos = charOverridePosition ?? initialCharPosition;
     chainStartX = currentPos?.x ?? 50;
@@ -435,6 +443,11 @@ export function createChickenCanvasController(config, elements) {
   function startCarRunning(coinIndex) {
     if (!carsConfig || carVariantImages.length === 0) return;
     if (pendingJumpStart) return;
+    if (coinIndex === pendingJumpForCoinIndex) return;
+    if (chainActive && chainTargetCoinIndex === coinIndex) {
+      scheduleNextCarDrive(coinIndex);
+      return;
+    }
     const coin = coinStates[coinIndex];
     if (!coin || coin.state === 'fade-out' || !coin.visible) return;
     if (runningCars.some((c) => c.coinIndex === coinIndex)) {
@@ -522,7 +535,13 @@ export function createChickenCanvasController(config, elements) {
       car.y += dy;
       if (car.y >= lastCanvasHeight + car.height) {
         carSlotStates[car.coinIndex].lastDriveEndTime = Date.now();
+        const wasWaitingForThisSlot = car.coinIndex === pendingJumpForCoinIndex;
         runningCars.splice(i, 1);
+        if (wasWaitingForThisSlot) {
+          const targetIndex = pendingJumpForCoinIndex;
+          pendingJumpForCoinIndex = null;
+          startJumpToCoin(targetIndex);
+        }
       }
     }
 
@@ -788,6 +807,7 @@ export function createChickenCanvasController(config, elements) {
     fadeInCars = [];
     carSlotStates.forEach((s) => { s.lastDriveEndTime = 0; });
     pendingJumpStart = false;
+    pendingJumpForCoinIndex = null;
     chainFadeInCombo = null;
     chainActive = false;
     charOverridePosition = null;

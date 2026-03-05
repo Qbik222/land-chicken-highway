@@ -82,6 +82,11 @@ Background → Coins → Cars → Barriers → Char
 - Якщо є running машини — встановлюється `pendingJumpStart`, нові running не стартують.
 - Коли всі running закінчують — `startJumpToCoin(0)`.
 
+**Перед стрибком на коін N:**
+- Якщо для slot N є running машина — чекати її проїзду (`pendingJumpForCoinIndex = N`).
+- Для slot N не спавнити нові running (перевірка в `startCarRunning`).
+- Коли машина проїде — запустити `startJumpToCoin(N)`.
+
 **Під час jumping:** running машини прискорюються (множник з конфігу).
 
 ---

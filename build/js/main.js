@@ -419,6 +419,7 @@ function createChickenCanvasController(config, elements) {
     };
   });
   var pendingJumpStart = false;
+  var pendingJumpForCoinIndex = null;
   var chainFadeInCombo = null;
   var carRunningRafId = null;
   var carDriveScheduleTimers = [];
@@ -467,6 +468,13 @@ function createChickenCanvasController(config, elements) {
   function startJumpToCoin(targetIndex) {
     var _charOverridePosition, _currentPos$x, _currentPos$y;
     if (targetIndex < 0 || targetIndex >= coinStates.length) return;
+    if (carsConfig && runningCars.some(function (c) {
+      return c.coinIndex === targetIndex;
+    })) {
+      pendingJumpForCoinIndex = targetIndex;
+      return;
+    }
+    pendingJumpForCoinIndex = null;
     chainTargetCoinIndex = targetIndex;
     var currentPos = (_charOverridePosition = charOverridePosition) !== null && _charOverridePosition !== void 0 ? _charOverridePosition : initialCharPosition;
     chainStartX = (_currentPos$x = currentPos === null || currentPos === void 0 ? void 0 : currentPos.x) !== null && _currentPos$x !== void 0 ? _currentPos$x : 50;
@@ -562,6 +570,11 @@ function createChickenCanvasController(config, elements) {
     var _carsConfig$maxConcur, _carsConfig$minStartG, _carSlotStates$coinIn, _carSlotStates$coinIn2;
     if (!carsConfig || carVariantImages.length === 0) return;
     if (pendingJumpStart) return;
+    if (coinIndex === pendingJumpForCoinIndex) return;
+    if (chainActive && chainTargetCoinIndex === coinIndex) {
+      scheduleNextCarDrive(coinIndex);
+      return;
+    }
     var coin = coinStates[coinIndex];
     if (!coin || coin.state === 'fade-out' || !coin.visible) return;
     if (runningCars.some(function (c) {
@@ -655,7 +668,13 @@ function createChickenCanvasController(config, elements) {
       car.y += dy;
       if (car.y >= lastCanvasHeight + car.height) {
         carSlotStates[car.coinIndex].lastDriveEndTime = Date.now();
+        var wasWaitingForThisSlot = car.coinIndex === pendingJumpForCoinIndex;
         runningCars.splice(i, 1);
+        if (wasWaitingForThisSlot) {
+          var targetIndex = pendingJumpForCoinIndex;
+          pendingJumpForCoinIndex = null;
+          startJumpToCoin(targetIndex);
+        }
       }
     }
     if (runningCars.length === 0) {
@@ -909,6 +928,7 @@ function createChickenCanvasController(config, elements) {
       s.lastDriveEndTime = 0;
     });
     pendingJumpStart = false;
+    pendingJumpForCoinIndex = null;
     chainFadeInCombo = null;
     chainActive = false;
     charOverridePosition = null;
