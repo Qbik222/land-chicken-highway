@@ -12,9 +12,15 @@ const fadeInPageConfig = getFadeInPageConfig();
 
 function initPage() {
   const chickenCanvas = initChickenCanvas(chickenCanvasConfig);
-  if (chickenCanvas && typeof chickenCanvas.recalcAndRestart === 'function') {
-    window.addEventListener('resize', chickenCanvas.recalcAndRestart);
-    window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
+  if (chickenCanvas) {
+    if (typeof chickenCanvas.recalcAndRestart === 'function') {
+      window.addEventListener('resize', chickenCanvas.recalcAndRestart);
+      window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
+    }
+    const initBtn = document.querySelector(chickenCanvasConfig.selectors.initBtn);
+    if (initBtn && typeof chickenCanvas.handleInitClick === 'function') {
+      initBtn.addEventListener('click', chickenCanvas.handleInitClick);
+    }
   }
   //  if (chickenCanvas?.startAnimationChain) {
   //    chickenCanvas.startAnimationChain();

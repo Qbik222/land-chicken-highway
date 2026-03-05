@@ -846,8 +846,8 @@ export function createChickenCanvasController(config, elements) {
   }
 
   function handleInitClick() {
-    wrapperEl.classList.add('_canvas-active');
-    recalcAndRestart();
+    startAnimationChain();
+    this.classList.add('_disabled');
   }
 
   function startAnimationChain() {

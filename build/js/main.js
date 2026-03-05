@@ -966,8 +966,8 @@ function createChickenCanvasController(config, elements) {
     }
   }
   function handleInitClick() {
-    wrapperEl.classList.add('_canvas-active');
-    recalcAndRestart();
+    startAnimationChain();
+    this.classList.add('_disabled');
   }
   function startAnimationChain() {
     if (!charConfig || !coinsConfig || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
@@ -1011,17 +1011,15 @@ function initChickenCanvas(config) {
   var wrapperEl = document.querySelector(selectors.wrapper);
   var landLeftEl = document.querySelector(selectors.landLeft);
   var canvasEl = document.querySelector(selectors.canvas);
-  var initBtnEl = document.querySelector(selectors.initBtn);
+  document.querySelector(selectors.initBtn);
   if (!wrapperEl || !landLeftEl || !canvasEl) return null;
   var controller = createChickenCanvasController(effectiveConfig, {
     wrapperEl: wrapperEl,
     canvasEl: canvasEl});
-  if (initBtnEl) {
-    initBtnEl.addEventListener('click', controller.handleInitClick);
-  }
   controller.recalcAndRestart();
   return {
     recalcAndRestart: controller.recalcAndRestart,
+    handleInitClick: controller.handleInitClick,
     setCharState: controller.setCharState,
     setCoinFadeOut: controller.setCoinFadeOut,
     startAnimationChain: controller.startAnimationChain
@@ -1266,9 +1264,15 @@ function getFadeInPageConfig() {
 getFadeInPageConfig();
 function initPage() {
   var chickenCanvas = initChickenCanvas(chickenCanvasConfig);
-  if (chickenCanvas && typeof chickenCanvas.recalcAndRestart === 'function') {
-    window.addEventListener('resize', chickenCanvas.recalcAndRestart);
-    window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
+  if (chickenCanvas) {
+    if (typeof chickenCanvas.recalcAndRestart === 'function') {
+      window.addEventListener('resize', chickenCanvas.recalcAndRestart);
+      window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
+    }
+    var initBtn = document.querySelector(chickenCanvasConfig.selectors.initBtn);
+    if (initBtn && typeof chickenCanvas.handleInitClick === 'function') {
+      initBtn.addEventListener('click', chickenCanvas.handleInitClick);
+    }
   }
   //  if (chickenCanvas?.startAnimationChain) {
   //    chickenCanvas.startAnimationChain();

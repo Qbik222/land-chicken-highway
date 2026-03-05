@@ -27,14 +27,11 @@ export function initChickenCanvas(config) {
     initBtnEl,
   });
 
-  if (initBtnEl) {
-    initBtnEl.addEventListener('click', controller.handleInitClick);
-  }
-
   controller.recalcAndRestart();
 
   return {
     recalcAndRestart: controller.recalcAndRestart,
+    handleInitClick: controller.handleInitClick,
     setCharState: controller.setCharState,
     setCoinFadeOut: controller.setCoinFadeOut,
     startAnimationChain: controller.startAnimationChain,
