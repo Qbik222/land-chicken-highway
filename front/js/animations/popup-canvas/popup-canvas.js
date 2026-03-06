@@ -15,6 +15,7 @@ export function initPopupCanvas(config) {
 
   return {
     drawFullFrameLoop: controller.drawFullFrameLoop,
+    stopLoop: controller.stopLoop,
   };
 }
   

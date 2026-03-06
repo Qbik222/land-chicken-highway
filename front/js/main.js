@@ -9,10 +9,18 @@ import { initTest } from './test.js';
 // ——— Constants —————————————————————————————————————————————————————————————
 const debug = true;
 
+// test config
+const testConfig = {
+  root: document.querySelector('.land')
+};
+
 // ——— Init & entry point —————————————————————————————————————————————————————
 // const fadeInPageConfig = getFadeInPageConfig();
 
 function initPage() {
+  if (debug) {
+    initTest(testConfig);
+  }
   if (!chickenCanvasConfig.animationChain) {
     chickenCanvasConfig.animationChain = {};
   }

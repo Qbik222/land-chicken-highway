@@ -28,7 +28,9 @@ function runAnimation(name, step) {
 }
 function initAnimationChaining(config) {
   if (!config) return;
-  var _config$steps = config.steps,
+  var _config$beforeStartDe = config.beforeStartDelay,
+    beforeStartDelay = _config$beforeStartDe === void 0 ? 0 : _config$beforeStartDe,
+    _config$steps = config.steps,
     steps = _config$steps === void 0 ? [] : _config$steps,
     _config$delays = config.delays,
     delays = _config$delays === void 0 ? [] : _config$delays;
@@ -56,7 +58,11 @@ function initAnimationChaining(config) {
       runStep(index + 1);
     }
   }
-  {
+  if (beforeStartDelay > 0) {
+    timeoutId = setTimeout(function () {
+      runStep(0);
+    }, beforeStartDelay);
+  } else {
     runStep(0);
   }
   return function cancel() {
@@ -1735,6 +1741,8 @@ function createPopupCanvasController(config, elements) {
   var frames = char.frames,
     animationTimingFrame = char.animationTimingFrame;
   var frameIndex = 0;
+  var loopStarted = false;
+  var timerId = null;
   function drawFullFrame(frames, canvas, frameIndex) {
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -1746,16 +1754,30 @@ function createPopupCanvasController(config, elements) {
     };
   }
   function drawFullFrameLoop() {
+    if (loopStarted) return;
+    loopStarted = true;
+    runLoop();
+  }
+  function runLoop() {
     drawFullFrame(frames, canvas, frameIndex);
     frameIndex++;
     if (frameIndex >= frames.length) {
       frameIndex = 0;
     }
-    setTimeout(drawFullFrameLoop, animationTimingFrame);
+    timerId = setTimeout(runLoop, animationTimingFrame);
+  }
+  function stopLoop() {
+    if (timerId) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+    loopStarted = false;
+    frameIndex = 0;
   }
   return {
     drawFullFrameLoop: drawFullFrameLoop,
-    drawFullFrame: drawFullFrame
+    drawFullFrame: drawFullFrame,
+    stopLoop: stopLoop
   };
 }
 
@@ -1768,7 +1790,8 @@ function initPopupCanvas(config) {
     canvas: canvasEl
   });
   return {
-    drawFullFrameLoop: controller.drawFullFrameLoop
+    drawFullFrameLoop: controller.drawFullFrameLoop,
+    stopLoop: controller.stopLoop
   };
 }
 
@@ -1838,11 +1861,85 @@ function getFadeInPopupConfig(btn, parrent, callbacks) {
     })
   };
 }
+function getPopupCloseConfig() {
+  var fadeInClass = '_fade-in';
+  var fadeOutClass = '_fade-out';
+  var animationName = 'toggleAnimation';
+  var popupEl = document.querySelector('.popup');
+  return {
+    beforeStartDelay: 0,
+    steps: [{
+      animation: animationName,
+      el: popupEl,
+      addClass: fadeOutClass,
+      removeClass: fadeInClass,
+      delay: 200
+    }],
+    delays: [200]
+  };
+}
+
+var popupCanvasInstance = null;
+function initTest(config) {
+  if (!config.root) return;
+  var root = config.root;
+  var testButtons = [{
+    className: 'js-test-open-popup',
+    label: 'Відкрити попап',
+    onClick: function onClick() {
+      var popupEl = document.querySelector('.popup');
+      if (!popupEl) return;
+      if (popupCanvasInstance) {
+        popupCanvasInstance.stopLoop();
+      }
+      popupCanvasInstance = initPopupCanvas(popupCanvasConfig);
+      var callbacks = popupCanvasInstance ? {
+        drawFullFrameLoop: popupCanvasInstance.drawFullFrameLoop
+      } : {
+        drawFullFrameLoop: function drawFullFrameLoop() {}
+      };
+      initAnimationChaining(getFadeInPopupConfig(null, popupEl, callbacks));
+    }
+  }, {
+    className: 'js-test-close-popup',
+    label: 'Закрити попап',
+    onClick: function onClick() {
+      if (popupCanvasInstance) {
+        popupCanvasInstance.stopLoop();
+      }
+      initAnimationChaining(getPopupCloseConfig());
+    }
+  }];
+  var buttonsMarkup = testButtons.map(function (btn) {
+    return "<button class=\"menu-test__btn ".concat(btn.className, "\">").concat(btn.label, "</button>");
+  }).join('');
+  var markup = "\n    <div class=\"menu-test\">\n      <button class=\"menu-test__btn menu-test__menu-btn js-menu-test-toggle\">Menu</button>\n      <div class=\"menu-test__buttons\">".concat(buttonsMarkup, "</div>\n    </div>\n  ");
+  root.insertAdjacentHTML('beforeend', markup);
+  var menuTest = root.querySelector('.menu-test');
+  var toggleBtn = menuTest.querySelector('.js-menu-test-toggle');
+  var buttonsWrap = menuTest.querySelector('.menu-test__buttons');
+  toggleBtn.addEventListener('click', function () {
+    var isHidden = buttonsWrap.classList.contains('menu-test__buttons_hidden');
+    buttonsWrap.classList.toggle('menu-test__buttons_hidden', !isHidden);
+  });
+  testButtons.forEach(function (btn, i) {
+    var el = menuTest.querySelector('.' + btn.className);
+    if (el && btn.onClick) el.addEventListener('click', btn.onClick);
+  });
+}
+
+// test config
+var testConfig = {
+  root: document.querySelector('.land')
+};
 
 // ——— Init & entry point —————————————————————————————————————————————————————
 // const fadeInPageConfig = getFadeInPageConfig();
 
 function initPage() {
+  {
+    initTest(testConfig);
+  }
   if (!chickenCanvasConfig.animationChain) {
     chickenCanvasConfig.animationChain = {};
   }

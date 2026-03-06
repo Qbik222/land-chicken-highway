@@ -1,11 +1,42 @@
 import { initAnimationChaining } from './animations/fabric-animation-chaining.js';
+import { getFadeInPopupConfig, getPopupCloseConfig } from './utils.js';
+import { initPopupCanvas } from './animations/popup-canvas/popup-canvas.js';
+import { popupCanvasConfig } from './animations/config/popup-canvas.config.js';
 
-function initTest(root, getFadeOutPopupConfig, getPopupCloseConfig, getPopupOpenChunkConfig) {
-  if (!root) return;
+let popupCanvasInstance = null;
+
+function initTest(config) {
+  if (!config.root) return;
+
+  const { root } = config;
 
   const testButtons = [
-  //   { className: 'js-menu-test-close', label: 'Закрити попап', onClick: function () { initAnimationChaining(getPopupCloseConfig()); } },
-  //   { className: 'js-menu-test-popup-chunk', label: 'Popup open chunk', onClick: function () { initAnimationChaining(getPopupOpenChunkConfig()); } },
+    {
+      className: 'js-test-open-popup',
+      label: 'Відкрити попап',
+      onClick: function () {
+        const popupEl = document.querySelector('.popup');
+        if (!popupEl) return;
+        if (popupCanvasInstance) {
+          popupCanvasInstance.stopLoop();
+        }
+        popupCanvasInstance = initPopupCanvas(popupCanvasConfig);
+        const callbacks = popupCanvasInstance
+          ? { drawFullFrameLoop: popupCanvasInstance.drawFullFrameLoop }
+          : { drawFullFrameLoop: () => {} };
+        initAnimationChaining(getFadeInPopupConfig(null, popupEl, callbacks));
+      },
+    },
+    {
+      className: 'js-test-close-popup',
+      label: 'Закрити попап',
+      onClick: function () {
+        if (popupCanvasInstance) {
+          popupCanvasInstance.stopLoop();
+        }
+        initAnimationChaining(getPopupCloseConfig());
+      },
+    },
   ];
 
   const buttonsMarkup = testButtons.map(function (btn) {
