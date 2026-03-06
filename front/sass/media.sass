@@ -35,3 +35,59 @@
       margin-top: 25px
     &__btn
       margin-top: 25px
+
++breakpoint($max-width: 1300px)
+  .land
+    &__left
+      min-width: 365px
+      max-width: 425px
+      padding: 40px 15px 40px 40px
+      &::before
+        right: -56px
+        width: 315px
+        height: 1335px
+      .btn
+        padding: 15px 19px
+        font-size: 19px
+        line-height: 19px
+        border-radius: 6px
+    &__title
+      gap: 8px
+      &-item
+        font-size: 47px
+        line-height: 47px
+    &__subtitle
+      font-size: 47px
+      line-height: 47px
+      padding: 15px 23px
+      border-radius: 9px
+      margin-top: 19px
+    &__counter
+      margin-top: 36px
+      &-number
+        font-size: 30px
+        gap: 12px
+        border-radius: 105px
+        padding: 6px 17px 6px 5px
+        &::before
+          width: 45px
+          height: 45px
+      &-text
+        font-size: 23px
+        margin-left: 18px
+    &__btn
+      margin-top: 36px
+    &__logo
+      max-width: 225px
+    .license
+      margin: auto auto 19px 0
+      gap: 6px
+
++breakpoint($max-width: 1200px, $orientation: landscape)
+  .land
+    &__canvas
+      &-btn
+        left: 260px
+      canvas
+        transform: scale(.85)
+        transform-origin: left top
