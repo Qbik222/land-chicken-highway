@@ -129,6 +129,13 @@
       margin: auto auto 19px 0
       gap: 6px
 
++breakpoint($max-height: 650px, $orientation: landscape)
+  .land
+    &__logo
+      max-width: 165px
+    &__left
+      padding: 20px 15px 20px 40px
+
 +breakpoint($max-width: 1200px, $orientation: landscape)
   .land
     &__canvas
@@ -214,6 +221,10 @@
         bottom: 100px
         left: 52%
         font-size: 24px
+        &:hover
+          transform: translateX(-50%) scale(1.05)
+        &:active
+          transform: translateX(-50%) scale(0.95)
   .license
     position: absolute
     bottom: 20px
@@ -248,6 +259,14 @@
       &-text
         font-size: 18px
 +breakpoint($max-width: 600px, $orientation: portrait)
+  .popup
+    &__wrapper
+      position: relative
+      left: 50%
+      transform: translateX(-50%)
+      &._fade-in
+        transform: scale(.63) translateX(-50%)
+        transform-origin: left center
   .land
     &__left
       padding: 14px 24px
@@ -291,4 +310,108 @@
 +breakpoint($max-width: 374px)
   .license
     min-width: 300px
-        
+
+  .popup
+    &__wrapper
+      &._fade-in
+        transform: scale(.53) translateX(-50%)
+
++breakpoint($max-width: 950px, $max-height: 450px, $orientation: landscape)
+  .land
+    &__canvas
+      canvas
+        left: 0
+        transform: scale(1)
+      &-btn
+        width: 170px
+        height: 120px
+        font-size: 18px
+    &__left
+      padding: 20px 15px 20px 20px
+      max-width: 275px
+      min-width: 275px
+    &__logo
+      max-width: 125px
+    &__title
+      &-item
+        font-size: 26px
+        line-height: 26px
+    &__subtitle
+      font-size: 26px
+      line-height: 26px
+      margin-top: auto
+      padding: 10px 20px
+    &__counter
+      margin-top: auto
+      &-number
+        font-size: 20px
+        &::before
+          width: 30px
+          height: 30px
+      &-text
+        font-size: 14px
+    &__btn
+      margin-top: auto
+    .license
+      margin-bottom: 0
+      max-width: 240px
+    .btn
+      font-size: 14px
+      padding: 8px 16px
+  .popup
+    &__wrapper
+      margin: 0
+      position: absolute
+      left: 50%
+      top: 50%
+      transform: translate(-50%, -50%)
+      &._fade-in
+        transform: scale(.63) translate(-50%, -50%)
+        transform-origin: left top
+
++breakpoint($max-width: 820px, $max-height: 450px, $orientation: landscape)
+  .land
+    &__canvas
+      &-btn
+        left: 200px
+
++breakpoint($max-width: 725px, $max-height: 450px, $orientation: landscape)
+  .land
+    &__canvas
+      &-btn
+        left: 170px
+    &__left
+      max-width: 235px
+      min-width: 235px
+
++breakpoint($max-width: 640px, $max-height: 450px, $orientation: landscape)
+  .land
+    &__canvas
+      canvas
+        transform: scale(.9)
+        transform-origin: left top
+      &-btn
+        left: 150px
+
++breakpoint($max-width: 600px, $max-height: 450px, $orientation: landscape)
+  .land
+    &__canvas
+      canvas
+        transform: scale(.83)
+        transform-origin: left top
+        left: -20px
+      &-btn
+        left: 110px
+
++breakpoint($max-width: 950px, $max-height: 400px, $orientation: landscape)
+  .popup
+    &__wrapper
+      &._fade-in
+        transform: scale(.53) translate(-50%, -50%)
+
++breakpoint($max-width: 950px, $max-height: 350px, $orientation: landscape)
+  .popup
+    &__wrapper
+      &._fade-in
+        transform: scale(.45) translate(-50%, -50%)
+

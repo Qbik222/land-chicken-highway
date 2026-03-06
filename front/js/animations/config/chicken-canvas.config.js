@@ -37,8 +37,12 @@ export const chickenCanvasConfig = {
     { maxWidth: 670, width: 670, height: 800, orientation: 'portrait' },
     { maxWidth: 500, width: 536, height: 910, orientation: 'portrait' },
     { maxWidth: 374, width: 410, height: 820, orientation: 'portrait' },
+    { maxWidth: 950, width: 660, height: 1050, orientation: 'landscape' },
+    { maxWidth: 820, width: 550, height: 850, orientation: 'landscape' },
+    { maxWidth: 725, width: 490, height: 650, orientation: 'landscape' },
     { maxWidth: 1500, width: 950, height: 1155 },
     { maxWidth: 1800, width: 1200, height: 1540 },
+    
     { maxWidth: Infinity, width: 1360, height: 1540, isWrapperFill: false },
   ],
   /** Char — дефолт 225×322px, стани stay | jumping. Розміри змінюються тільки через sizeBreakpoints. */
@@ -52,6 +56,7 @@ export const chickenCanvasConfig = {
       { maxWidth: 1500, width: 169, height: 242, orientation: 'landscape' },
       { maxWidth: 950, width: 140, height: 201, orientation: 'portrait' },
       { maxWidth: 670, width: 100, height: 143, orientation: 'portrait' },
+      { maxWidth: 950, width: 100, height: 143, orientation: 'landscape' },
       { maxWidth: Infinity, width: 225, height: 322 },
     ],
     /** Затримка між кадрами jumping (ms) */
@@ -70,6 +75,7 @@ export const chickenCanvasConfig = {
     ],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [
+      { maxWidth: 950, offsetX: 40, orientation: 'landscape' },
       { maxWidth: 374, offsetX: 20 },
       { maxWidth: 500, offsetX: 50 },
       { maxWidth: 1750, offsetX: 70 },
@@ -158,6 +164,33 @@ export const chickenCanvasConfig = {
         gapBetween: 20, 
         itemGaps: { 2: { gapBetweenLeft: 20 } } 
       },
+      { 
+        maxWidth: 950, 
+        width: 70, 
+        height: 85,
+        orientation: 'landscape', 
+        offsetRight: 20, 
+        gapBetween: 30, 
+        itemGaps: { 2: { gapBetweenLeft: 24 } } 
+      },
+        { 
+          maxWidth: 820, 
+          width: 70, 
+          height: 85,
+          orientation: 'landscape', 
+          offsetRight: -10, 
+          gapBetween: 10, 
+          itemGaps: { 2: { gapBetweenLeft: 15 } } 
+        },
+        { 
+          maxWidth: 725, 
+          width: 60, 
+          height: 75,
+          orientation: 'landscape', 
+          offsetRight: -20, 
+          gapBetween: 10, 
+          itemGaps: { 2: { gapBetweenLeft: 15 } } 
+        },
 
       { maxWidth: 1800, offsetRight: 20, gapBetween: 30, itemGaps: { 2: { gapBetweenLeft: 40 } } },
       { maxWidth: Infinity, offsetRight: 30, gapBetween: 70, itemGaps: { 2: { gapBetweenLeft: 60 } } },
@@ -184,6 +217,7 @@ export const chickenCanvasConfig = {
       { maxWidth: 670, width: 96, height: 64, offsetAbove: 8 },
       { maxWidth: 500, width: 80, height: 56, offsetAbove: 8 },
       { maxWidth: 374, width: 64, height: 48, offsetAbove: 8 },
+      { maxWidth: 950, width: 64, height: 48, offsetAbove: 8, orientation: 'landscape' }, // mb not working
       { maxWidth: Infinity },
     ],
     imagePath: './img/canvas/barrier',
@@ -214,7 +248,7 @@ export const chickenCanvasConfig = {
     breakpoints: [
       { maxWidth: 1500, sizeScale: 0.75, offsetAboveCanvas: 15, stopBeforeBarrier: 15 },
       { maxWidth: 950, sizeScale: 0.65, offsetAboveCanvas: 15, stopBeforeBarrier: 0 },
-      { maxWidth: 670, sizeScale: 0.55, offsetAboveCanvas: 15, stopBeforeBarrier: 0 },
+      { maxWidth: 670, sizeScale: 0.5, offsetAboveCanvas: 15, stopBeforeBarrier: 0 },
       { maxWidth: 500, sizeScale: 0.45, offsetAboveCanvas: 15, stopBeforeBarrier: 0 },
       { maxWidth: 374, sizeScale: 0.35, offsetAboveCanvas: 15, stopBeforeBarrier: 0 },
       { maxWidth: Infinity, sizeScale: 1 },

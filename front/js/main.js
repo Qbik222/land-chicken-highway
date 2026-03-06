@@ -1,14 +1,16 @@
 import { initAnimationChaining } from './animations/fabric-animation-chaining.js';
-import { initChickenCanvas } from './animations/chicken-canvas.js';
-import { chickenCanvasConfig } from './animations/config/animations.config.js';
-import { getFadeInPageConfig, getFadeOutPopupConfig, getPopupCloseConfig, getIsPagePopupAnimation } from './utils.js';
+import { initChickenCanvas } from './animations/chicken-canvas/chicken-canvas.js';
+import { chickenCanvasConfig } from './animations/config/chicken-canvas.config.js';
+import { popupCanvasConfig } from './animations/config/popup-canvas.config.js';
+import { initPopupCanvas } from './animations/popup-canvas/popup-canvas.js';
+import { getFadeInPopupConfig } from './utils.js';
 import { initTest } from './test.js';
 
 // ——— Constants —————————————————————————————————————————————————————————————
 const debug = true;
 
 // ——— Init & entry point —————————————————————————————————————————————————————
-const fadeInPageConfig = getFadeInPageConfig();
+// const fadeInPageConfig = getFadeInPageConfig();
 
 function initPage() {
   if (!chickenCanvasConfig.animationChain) {
@@ -23,8 +25,13 @@ function initPage() {
     if (document.body) {
       document.body.style.overflow = 'hidden';
     }
-    const fadeOutPopupConfig = getFadeOutPopupConfig(null);
-    // initAnimationChaining(fadeOutPopupConfig);
+    const popupCanvas = initPopupCanvas(popupCanvasConfig);
+    if (!popupCanvas) {
+      console.warn('popupCanvas not initialized — canvas element not found');
+      return;
+    }
+    const fadeInPopupConfig = getFadeInPopupConfig(null, document.querySelector('.popup'), { drawFullFrameLoop: popupCanvas.drawFullFrameLoop });
+    initAnimationChaining(fadeInPopupConfig);
   };
 
   const chickenCanvas = initChickenCanvas(chickenCanvasConfig);
@@ -33,14 +40,19 @@ function initPage() {
       window.addEventListener('resize', chickenCanvas.recalcAndRestart);
       window.addEventListener('orientationchange', chickenCanvas.recalcAndRestart);
     }
+
     const initBtn = document.querySelector(chickenCanvasConfig.selectors.initBtn);
     if (initBtn && typeof chickenCanvas.handleInitClick === 'function') {
       initBtn.addEventListener('click', chickenCanvas.handleInitClick);
     }
   }
+
+  
   //  if (chickenCanvas?.startAnimationChain) {
   //    chickenCanvas.startAnimationChain();
   //  }
+
+
 
   const popupBtn = document.querySelector('.land__btn[data-popup="popup"]');
   // if (popupBtn) popupBtn.style.pointerEvents = 'none';

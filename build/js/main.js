@@ -1,3 +1,69 @@
+function toggleAnimation(el, addClass, removeClass) {
+  if (!el) return;
+  if (removeClass && el.classList.contains(removeClass)) {
+    el.classList.remove(removeClass);
+  }
+  if (addClass) {
+    el.classList.add(addClass);
+  }
+}
+function getElementsFromStep(step) {
+  if (step.elements && Array.isArray(step.elements)) {
+    return step.elements;
+  }
+  if (step.el) {
+    return [step.el];
+  }
+  return [];
+}
+function runAnimation(name, step) {
+  var elements = getElementsFromStep(step);
+  switch (name) {
+    case 'toggleAnimation':
+      elements.forEach(function (el) {
+        toggleAnimation(el, step.addClass, step.removeClass);
+      });
+      break;
+  }
+}
+function initAnimationChaining(config) {
+  if (!config) return;
+  var _config$steps = config.steps,
+    steps = _config$steps === void 0 ? [] : _config$steps,
+    _config$delays = config.delays,
+    delays = _config$delays === void 0 ? [] : _config$delays;
+  if (steps.length === 0) return;
+  var timeoutId;
+  function runStep(index) {
+    if (index >= steps.length) return;
+    var step = steps[index];
+    var name = step.animation;
+    runAnimation(name, step);
+    if (typeof step.callback === 'function') {
+      var args = [step, index];
+      if (Array.isArray(step.callbackArgs)) {
+        args.push.apply(args, step.callbackArgs);
+      }
+      step.callback.apply(null, args);
+    }
+    if (step.stopAnimationChaining) return;
+    var delay = delays.length > 0 ? delays[index % delays.length] : undefined;
+    if (typeof delay === 'number' && delay > 0 && index + 1 < steps.length) {
+      timeoutId = setTimeout(function () {
+        runStep(index + 1);
+      }, delay);
+    } else if (index + 1 < steps.length) {
+      runStep(index + 1);
+    }
+  }
+  {
+    runStep(0);
+  }
+  return function cancel() {
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+}
+
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
   if (Object.getOwnPropertySymbols) {
@@ -73,6 +139,30 @@ function _toPropertyKey(arg) {
   return typeof key === "symbol" ? key : String(key);
 }
 
+function loadImage(src) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () {
+      return resolve(img);
+    };
+    img.onerror = function () {
+      return reject(new Error('Failed to load: ' + src));
+    };
+    try {
+      img.src = new URL(src, window.location.href).href;
+    } catch (e) {
+      img.src = src;
+    }
+  });
+}
+function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, canvasHeight) {
+  var drawWidth = canvasWidth;
+  var drawHeight = canvasHeight;
+  var x = 0;
+  var y = 0;
+  ctx.drawImage(img, x, y, drawWidth, drawHeight);
+}
+
 /**
  * Chicken canvas — бізнес-логіка.
  * Умови: front/canvas-flow.md
@@ -143,29 +233,6 @@ function getBackgroundBreakpointForWidth(bgBreakpoints, canvasWidth) {
 
   var bp = (_bgBreakpoints$find = bgBreakpoints.find(matches)) !== null && _bgBreakpoints$find !== void 0 ? _bgBreakpoints$find : bgBreakpoints.find(matchesWidthOnly);
   return bp !== null && bp !== void 0 ? bp : bgBreakpoints[bgBreakpoints.length - 1];
-}
-function loadImage(src) {
-  return new Promise(function (resolve, reject) {
-    var img = new Image();
-    img.onload = function () {
-      return resolve(img);
-    };
-    img.onerror = function () {
-      return reject(new Error('Failed to load: ' + src));
-    };
-    try {
-      img.src = new URL(src, window.location.href).href;
-    } catch (e) {
-      img.src = src;
-    }
-  });
-}
-function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, canvasHeight) {
-  var drawWidth = canvasWidth;
-  var drawHeight = canvasHeight;
-  var x = 0;
-  var y = 0;
-  ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }
 function sortBackgroundBreakpoints(breakpoints) {
   var _sorted$filter;
@@ -1266,6 +1333,21 @@ var chickenCanvasConfig = {
     height: 820,
     orientation: 'portrait'
   }, {
+    maxWidth: 950,
+    width: 660,
+    height: 1050,
+    orientation: 'landscape'
+  }, {
+    maxWidth: 820,
+    width: 550,
+    height: 850,
+    orientation: 'landscape'
+  }, {
+    maxWidth: 725,
+    width: 490,
+    height: 650,
+    orientation: 'landscape'
+  }, {
     maxWidth: 1500,
     width: 950,
     height: 1155
@@ -1306,6 +1388,11 @@ var chickenCanvasConfig = {
       height: 143,
       orientation: 'portrait'
     }, {
+      maxWidth: 950,
+      width: 100,
+      height: 143,
+      orientation: 'landscape'
+    }, {
       maxWidth: Infinity,
       width: 225,
       height: 322
@@ -1315,6 +1402,10 @@ var chickenCanvasConfig = {
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [{
+      maxWidth: 950,
+      offsetX: 40,
+      orientation: 'landscape'
+    }, {
       maxWidth: 374,
       offsetX: 20
     }, {
@@ -1431,6 +1522,42 @@ var chickenCanvasConfig = {
         }
       }
     }, {
+      maxWidth: 950,
+      width: 70,
+      height: 85,
+      orientation: 'landscape',
+      offsetRight: 20,
+      gapBetween: 30,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 24
+        }
+      }
+    }, {
+      maxWidth: 820,
+      width: 70,
+      height: 85,
+      orientation: 'landscape',
+      offsetRight: -10,
+      gapBetween: 10,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 15
+        }
+      }
+    }, {
+      maxWidth: 725,
+      width: 60,
+      height: 75,
+      orientation: 'landscape',
+      offsetRight: -20,
+      gapBetween: 10,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 15
+        }
+      }
+    }, {
       maxWidth: 1800,
       offsetRight: 20,
       gapBetween: 30,
@@ -1496,6 +1623,14 @@ var chickenCanvasConfig = {
       height: 48,
       offsetAbove: 8
     }, {
+      maxWidth: 950,
+      width: 64,
+      height: 48,
+      offsetAbove: 8,
+      orientation: 'landscape'
+    },
+    // mb not working
+    {
       maxWidth: Infinity
     }],
     imagePath: './img/canvas/barrier',
@@ -1546,7 +1681,7 @@ var chickenCanvasConfig = {
       stopBeforeBarrier: 0
     }, {
       maxWidth: 670,
-      sizeScale: 0.55,
+      sizeScale: 0.5,
       offsetAboveCanvas: 15,
       stopBeforeBarrier: 0
     }, {
@@ -1583,226 +1718,118 @@ var chickenCanvasConfig = {
   /** Override for testing: pass custom breakpoints/root to force a specific background. */
   override: null
 };
-var textAnimationConfig = {
-  wrapOrder: ['.land__text-item._first', '.land__text-item._second', '.land__text-item._third'],
-  beforeShowBottomDelay: 500,
-  showDuration: 200
+
+var popupCanvasConfig = {
+  selectors: {
+    canvas: '[data-canvas="popup"]'
+  },
+  char: {
+    frames: ['./img/popup/char/frame-1.png', './img/popup/char/frame-2.png', './img/popup/char/frame-3.png'],
+    animationTimingFrame: 300
+  }
 };
+
+function createPopupCanvasController(config, elements) {
+  var char = config.char;
+  var canvas = elements.canvas;
+  var frames = char.frames,
+    animationTimingFrame = char.animationTimingFrame;
+  var frameIndex = 0;
+  function drawFullFrame(frames, canvas, frameIndex) {
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var img = new Image();
+    img.src = frames[frameIndex];
+    img.onload = function () {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+  }
+  function drawFullFrameLoop() {
+    drawFullFrame(frames, canvas, frameIndex);
+    frameIndex++;
+    if (frameIndex >= frames.length) {
+      frameIndex = 0;
+    }
+    setTimeout(drawFullFrameLoop, animationTimingFrame);
+  }
+  return {
+    drawFullFrameLoop: drawFullFrameLoop,
+    drawFullFrame: drawFullFrame
+  };
+}
+
+function initPopupCanvas(config) {
+  if (!config) return null;
+  var selectors = config.selectors;
+  var canvasEl = document.querySelector(selectors.canvas);
+  if (!canvasEl) return null;
+  var controller = createPopupCanvasController(config, {
+    canvas: canvasEl
+  });
+  return {
+    drawFullFrameLoop: controller.drawFullFrameLoop
+  };
+}
 
 /**
  * Утиліти та бізнес-логіка сторінки.
  */
 
-function setPopupAnimationToggler() {
-  var popupBtn = document.querySelector('.land__btn[data-popup="popup"]');
-  if (popupBtn) popupBtn.style.pointerEvents = 'initial';
-  var animLayerEl = document.querySelector('.land__anim-layer');
-  if (animLayerEl) animLayerEl.classList.add('_fade-in-btn');
-}
-function buildTextAnimationSteps(config) {
-  var cfg = textAnimationConfig;
-  var steps = [];
-  var animationName = 'toggleAnimation';
-  cfg.wrapOrder.forEach(function (wrapSelector) {
-    var wrap = document.querySelector(wrapSelector);
-    if (!wrap) return;
-    var topEl = wrap.querySelector('._anim-text-top');
-    var bottomEl = wrap.querySelector('._anim-text-bottom');
-    if (!topEl || !bottomEl) return;
-    steps.push({
-      animation: animationName,
-      el: topEl,
-      addClass: '_fade-in',
-      removeClass: '_fade-out',
-      delay: 100
-    }, {
-      animation: animationName,
-      el: bottomEl,
-      addClass: '_fade-in',
-      removeClass: '_fade-out',
-      delay: cfg.beforeShowBottomDelay
-    }, {
-      animation: animationName,
-      el: topEl,
-      addClass: '_fade-out',
-      removeClass: '_fade-in',
-      delay: cfg.showDuration
-    }, {
-      animation: animationName,
-      el: bottomEl,
-      addClass: '_fade-out',
-      removeClass: '_fade-in',
-      delay: cfg.showDuration
-    });
-  });
-  return steps;
-}
-function getFadeInPageConfig() {
-  var yourEl = document.querySelector('.land__title-your');
-  var airplaneBtnEl = document.querySelector('.land__anim-layer');
-  var firstEl = document.querySelector('.land__title-animated-item._first');
-  var secondEl = document.querySelector('.land__title-animated-item._second');
-  var thirdEl = document.querySelector('.land__title-animated-item._third');
+function getFadeInPopupConfig(btn, parrent, callbacks) {
   var fadeInClass = '_fade-in';
   var fadeOutClass = '_fade-out';
   var animationName = 'toggleAnimation';
+  var popupWrapperEl = parrent.querySelector('.popup__wrapper');
+  var firstTitleEl = parrent.querySelectorAll('.popup__title-item')[0];
+  var secondTitleEl = parrent.querySelectorAll('.popup__title-item')[1];
+  var thirdTitleEl = parrent.querySelectorAll('.popup__subtitle-item')[0];
+  var fourthTitleEl = parrent.querySelectorAll('.popup__subtitle-item')[1];
+  function showGloabalLink() {
+    var globalLinkEl = document.querySelector('.global-link');
+    if (globalLinkEl) globalLinkEl.classList.add('_fade-in');
+  }
   var steps = [{
     animation: animationName,
-    el: yourEl,
+    el: parrent,
     addClass: fadeInClass,
     removeClass: fadeOutClass,
-    delay: 200
-  }, {
-    animation: animationName,
-    el: firstEl,
-    addClass: fadeInClass,
-    removeClass: fadeOutClass,
-    delay: 200
-  }, {
-    animation: animationName,
-    el: airplaneBtnEl,
-    addClass: fadeInClass,
-    removeClass: fadeOutClass,
-    delay: 200
-  }, {
-    animation: animationName,
-    el: firstEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
-    delay: 1000
-  }, {
-    animation: animationName,
-    el: secondEl,
-    addClass: fadeInClass,
-    removeClass: fadeOutClass,
-    delay: 1000
-  }, {
-    animation: animationName,
-    el: secondEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
-    delay: 1000
-  }, {
-    animation: animationName,
-    el: thirdEl,
-    addClass: fadeInClass,
-    removeClass: fadeOutClass,
-    delay: 1000,
-    callback: setPopupAnimationToggler
-  }];
-  return {
-    beforeStartDelay: 500,
-    steps: steps,
-    delays: steps.map(function (s) {
-      return s.delay;
-    })
-  };
-}
-function getFadeOutPopupConfig(btn) {
-  var fadeInClass = '_fade-in';
-  var fadeOutClass = '_fade-out';
-  var animationName = 'toggleAnimation';
-  var titleYourEl = document.querySelector('.land__title-your');
-  var firstTitleEl = document.querySelector('.land__title-animated-item._first');
-  var secondTitleEl = document.querySelector('.land__title-animated-item._second');
-  var thirdTitleEl = document.querySelector('.land__title-animated-item._third');
-  var animLayerEl = document.querySelector('.land__anim-layer');
-  var popupEl = document.querySelector('.popup');
-  var landTextEl = document.querySelector('.land__text');
-  var steps = [{
-    animation: animationName,
-    el: titleYourEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
-    delay: 0,
+    delay: 300,
     callback: function callback() {
+      callbacks.drawFullFrameLoop();
+      showGloabalLink();
     }
   }, {
     animation: animationName,
+    el: popupWrapperEl,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
+    delay: 200
+  }, {
+    animation: animationName,
     el: firstTitleEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
+    addClass: fadeInClass,
+    removeClass: fadeOutClass,
     delay: 0
   }, {
     animation: animationName,
     el: secondTitleEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
-    delay: 0
-  }, {
-    animation: animationName,
-    el: thirdTitleEl,
-    addClass: "",
-    removeClass: fadeInClass,
-    delay: 0
-  }, {
-    animation: animationName,
-    el: animLayerEl,
-    addClass: fadeOutClass,
-    removeClass: fadeInClass,
-    delay: 0
-  }, {
-    animation: animationName,
-    el: landTextEl,
-    addClass: '',
-    removeClass: '',
-    delay: 600
-  }];
-  steps.push.apply(steps, buildTextAnimationSteps());
-  var popupTitleEl = document.querySelector('.popup__title');
-  var popupTextTopEl = document.querySelector('.popup__text ._anim-text-top');
-  var popupTextBottomEl = document.querySelector('.popup__text ._anim-text-bottom');
-  var popupBtnEl = document.querySelector('.popup__btn');
-  var globalLinkEl = document.querySelector('.global-link');
-  steps.push({
-    animation: animationName,
-    el: popupEl,
     addClass: fadeInClass,
     removeClass: fadeOutClass,
     delay: 500
   }, {
     animation: animationName,
-    el: popupTitleEl,
+    el: thirdTitleEl,
     addClass: fadeInClass,
     removeClass: fadeOutClass,
     delay: 0
   }, {
     animation: animationName,
-    el: popupTextTopEl,
+    el: fourthTitleEl,
     addClass: fadeInClass,
     removeClass: fadeOutClass,
     delay: 0
-  }, {
-    animation: animationName,
-    el: popupTextBottomEl,
-    addClass: fadeInClass,
-    removeClass: fadeOutClass,
-    delay: 0
-  }, {
-    animation: animationName,
-    el: globalLinkEl,
-    addClass: '_fade-in',
-    removeClass: '',
-    delay: 0
-  }, {
-    animation: animationName,
-    el: popupBtnEl,
-    addClass: '_anim-btn-scale',
-    removeClass: '',
-    delay: 700
-  }, {
-    animation: animationName,
-    el: popupTextTopEl,
-    addClass: '_anim-text-popup',
-    removeClass: '',
-    delay: 0
-  }, {
-    animation: animationName,
-    el: popupTextBottomEl,
-    addClass: '_anim-text-popup',
-    removeClass: '',
-    delay: 0
-  });
+  }];
   return {
     beforeStartDelay: 0,
     steps: steps,
@@ -1813,7 +1840,8 @@ function getFadeOutPopupConfig(btn) {
 }
 
 // ——— Init & entry point —————————————————————————————————————————————————————
-getFadeInPageConfig();
+// const fadeInPageConfig = getFadeInPageConfig();
+
 function initPage() {
   if (!chickenCanvasConfig.animationChain) {
     chickenCanvasConfig.animationChain = {};
@@ -1829,10 +1857,16 @@ function initPage() {
     if (document.body) {
       document.body.style.overflow = 'hidden';
     }
-    getFadeOutPopupConfig();
-    // initAnimationChaining(fadeOutPopupConfig);
+    var popupCanvas = initPopupCanvas(popupCanvasConfig);
+    if (!popupCanvas) {
+      console.warn('popupCanvas not initialized — canvas element not found');
+      return;
+    }
+    var fadeInPopupConfig = getFadeInPopupConfig(null, document.querySelector('.popup'), {
+      drawFullFrameLoop: popupCanvas.drawFullFrameLoop
+    });
+    initAnimationChaining(fadeInPopupConfig);
   };
-
   var chickenCanvas = initChickenCanvas(chickenCanvasConfig);
   if (chickenCanvas) {
     if (typeof chickenCanvas.recalcAndRestart === 'function') {
@@ -1844,6 +1878,7 @@ function initPage() {
       initBtn.addEventListener('click', chickenCanvas.handleInitClick);
     }
   }
+
   //  if (chickenCanvas?.startAnimationChain) {
   //    chickenCanvas.startAnimationChain();
   //  }

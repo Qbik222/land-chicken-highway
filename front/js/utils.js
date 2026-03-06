@@ -2,7 +2,7 @@
  * Утиліти та бізнес-логіка сторінки.
  */
 
-import { textAnimationConfig } from './animations/config/animations.config.js';
+import { textAnimationConfig } from './animations/config/chicken-canvas.config.js';
 
 let isPagePopupAnimation = false;
 
@@ -71,61 +71,35 @@ export function getFadeInPageConfig() {
   };
 }
 
-export function getFadeOutPopupConfig(btn) {
+export function getFadeInPopupConfig(btn, parrent, callbacks) {
   const fadeInClass = '_fade-in';
   const fadeOutClass = '_fade-out';
   const animationName = 'toggleAnimation';
 
-  const titleYourEl = document.querySelector('.land__title-your');
-  const firstTitleEl = document.querySelector('.land__title-animated-item._first');
-  const secondTitleEl = document.querySelector('.land__title-animated-item._second');
-  const thirdTitleEl = document.querySelector('.land__title-animated-item._third');
-  const animLayerEl = document.querySelector('.land__anim-layer');
-  const popupEl = document.querySelector('.popup');
-  const landTextEl = document.querySelector('.land__text');
+  const popupWrapperEl = parrent.querySelector('.popup__wrapper');
+  const firstTitleEl = parrent.querySelectorAll('.popup__title-item')[0];
+  const secondTitleEl = parrent.querySelectorAll('.popup__title-item')[1];
+  const thirdTitleEl = parrent.querySelectorAll('.popup__subtitle-item')[0];
+  const fourthTitleEl = parrent.querySelectorAll('.popup__subtitle-item')[1];
+
+  function showGloabalLink() {
+    const globalLinkEl = document.querySelector('.global-link');
+    if (globalLinkEl) globalLinkEl.classList.add('_fade-in');
+  }
+
 
   const steps = [
-    {
-      animation: animationName,
-      el: titleYourEl,
-      addClass: fadeOutClass,
-      removeClass: fadeInClass,
-      delay: 0,
-      callback: function () {
-        if (btn) btn.style.pointerEvents = 'none';
-      },
-    },
-    { animation: animationName, el: firstTitleEl, addClass: fadeOutClass, removeClass: fadeInClass, delay: 0 },
-    { animation: animationName, el: secondTitleEl, addClass: fadeOutClass, removeClass: fadeInClass, delay: 0},
-    { animation: animationName, el: thirdTitleEl, addClass: "", removeClass: fadeInClass, delay: 0 },
-    { animation: animationName, el: animLayerEl, addClass: fadeOutClass, removeClass: fadeInClass, delay: 0 },
-    {
-      animation: animationName,
-      el: landTextEl,
-      addClass: '',
-      removeClass: '',
-      delay: 600,
-    },
+    { animation: animationName, el: parrent, addClass: fadeInClass, removeClass: fadeOutClass, delay: 300, 
+      callback: () => {
+      callbacks.drawFullFrameLoop();
+      showGloabalLink();
+    }},
+    { animation: animationName, el: popupWrapperEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 200 },
+    { animation: animationName, el: firstTitleEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0 },
+    { animation: animationName, el: secondTitleEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 500 },
+    { animation: animationName, el: thirdTitleEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0},
+    { animation: animationName, el: fourthTitleEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0},
   ];
-
-  steps.push.apply(steps, buildTextAnimationSteps());
-
-  const popupTitleEl = document.querySelector('.popup__title');
-  const popupTextTopEl = document.querySelector('.popup__text ._anim-text-top');
-  const popupTextBottomEl = document.querySelector('.popup__text ._anim-text-bottom');
-  const popupBtnEl = document.querySelector('.popup__btn');
-  const globalLinkEl = document.querySelector('.global-link');
-
-  steps.push(
-    { animation: animationName, el: popupEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 500 },
-    { animation: animationName, el: popupTitleEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0 },
-    { animation: animationName, el: popupTextTopEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0 },
-    { animation: animationName, el: popupTextBottomEl, addClass: fadeInClass, removeClass: fadeOutClass, delay: 0 },
-    { animation: animationName, el: globalLinkEl, addClass: '_fade-in', removeClass: '', delay: 0 },
-    { animation: animationName, el: popupBtnEl, addClass: '_anim-btn-scale', removeClass: '', delay: 700 },
-    { animation: animationName, el: popupTextTopEl, addClass: '_anim-text-popup', removeClass: '', delay: 0 },
-    { animation: animationName, el: popupTextBottomEl, addClass: '_anim-text-popup', removeClass: '', delay: 0 },
-  );
 
   return {
     beforeStartDelay: 0,
