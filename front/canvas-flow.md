@@ -49,7 +49,7 @@
 - **Позиціонування:** в ряд, відносно char
   - Перший коін — `offsetRight` px вправо від char (breakpoints); `offsetRightDefault` — fallback у конфігу
   - Кожен наступний — `gapBetween` px праворуч від попереднього (breakpoints)
-  - Кастом: `items[i].gapBetweenLeft` — відступ зліва для коіна i; `items[i].gapBetweenRight` — відступ справа (впливає на наступний коін). У `gapBreakpoints` можна `itemGaps: { index: { gapBetweenLeft, gapBetweenRight } }` — перевизначення по брейкпоінтах
+  - Кастом: `items[i].gapBetweenLeft` — відступ зліва для коіна i; `items[i].gapBetweenRight` — відступ справа (впливає на наступний коін). У `breakpoints` можна `itemGaps: { index: { gapBetweenLeft, gapBetweenRight } }` — перевизначення по брейкпоінтах
   - По вертикалі — центрування як у char (wrapperHeight)
 - **API:** `setCoinFadeOut(coinIndex)` — запустити fade-out для коіна з індексом `coinIndex`
 

@@ -80,28 +80,37 @@ function _toPropertyKey(arg) {
 
 /**
  * Розміри canvas з брейкпоінтів. Якщо bp.isWrapperFill === true — width/height з wrapperEl.
+ * Орієнтація застосовується разом із діапазоном maxWidth (CSS-like: (max-width: X) and (orientation: portrait)).
  */
 function getCanvasDimensionsFromBreakpoints(sizeBreakpoints, wrapperEl) {
-  var sorted = _toConsumableArray(sizeBreakpoints || []).sort(function (a, b) {
+  var _sorted$find;
+  var points = sizeBreakpoints || [];
+  var sorted = _toConsumableArray(points).sort(function (a, b) {
     var _a$maxWidth, _b$maxWidth;
     return ((_a$maxWidth = a.maxWidth) !== null && _a$maxWidth !== void 0 ? _a$maxWidth : Infinity) - ((_b$maxWidth = b.maxWidth) !== null && _b$maxWidth !== void 0 ? _b$maxWidth : Infinity);
   });
   var viewportWidth = window.innerWidth;
-  for (var i = 0; i < sorted.length; i++) {
+  var orientation = getCurrentOrientation();
+  var matches = function matches(bp) {
     var _bp$maxWidth;
-    var bp = sorted[i];
-    if (viewportWidth <= ((_bp$maxWidth = bp.maxWidth) !== null && _bp$maxWidth !== void 0 ? _bp$maxWidth : Infinity)) {
-      if (bp.isWrapperFill && wrapperEl) {
-        return {
-          width: wrapperEl.offsetWidth || bp.width,
-          height: wrapperEl.offsetHeight || bp.height
-        };
-      }
+    return viewportWidth <= ((_bp$maxWidth = bp.maxWidth) !== null && _bp$maxWidth !== void 0 ? _bp$maxWidth : Infinity) && (!bp.orientation || bp.orientation === orientation);
+  };
+  var matchesWidthOnly = function matchesWidthOnly(bp) {
+    var _bp$maxWidth2;
+    return viewportWidth <= ((_bp$maxWidth2 = bp.maxWidth) !== null && _bp$maxWidth2 !== void 0 ? _bp$maxWidth2 : Infinity);
+  };
+  var bp = (_sorted$find = sorted.find(matches)) !== null && _sorted$find !== void 0 ? _sorted$find : sorted.find(matchesWidthOnly);
+  if (bp) {
+    if (bp.isWrapperFill && wrapperEl) {
       return {
-        width: bp.width,
-        height: bp.height
+        width: wrapperEl.offsetWidth || bp.width,
+        height: wrapperEl.offsetHeight || bp.height
       };
     }
+    return {
+      width: bp.width,
+      height: bp.height
+    };
   }
   var last = sorted[sorted.length - 1];
   if (last !== null && last !== void 0 && last.isWrapperFill && wrapperEl) {
@@ -119,14 +128,21 @@ function getCanvasDimensionsFromBreakpoints(sizeBreakpoints, wrapperEl) {
   };
 }
 function getBackgroundBreakpointForWidth(bgBreakpoints, canvasWidth) {
+  var _bgBreakpoints$find;
   var switchThreshold = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 50;
-  for (var i = 0; i < bgBreakpoints.length; i++) {
-    var bp = bgBreakpoints[i];
-    if (canvasWidth >= bp.rootWidth + switchThreshold) {
-      return bp;
-    }
-  }
-  return bgBreakpoints[bgBreakpoints.length - 1];
+  var orientation = getCurrentOrientation();
+  var matches = function matches(bp) {
+    return canvasWidth >= bp.rootWidth + switchThreshold && (!bp.orientation || bp.orientation === orientation);
+  };
+  var matchesWidthOnly = function matchesWidthOnly(bp) {
+    return canvasWidth >= bp.rootWidth + switchThreshold;
+  };
+  console.log(matches);
+
+  // console.log(bgBreakpoints.find(matches), orientation);
+
+  var bp = (_bgBreakpoints$find = bgBreakpoints.find(matches)) !== null && _bgBreakpoints$find !== void 0 ? _bgBreakpoints$find : bgBreakpoints.find(matchesWidthOnly);
+  return bp !== null && bp !== void 0 ? bp : bgBreakpoints[bgBreakpoints.length - 1];
 }
 function loadImage(src) {
   return new Promise(function (resolve, reject) {
@@ -152,9 +168,33 @@ function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, canvasHeig
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }
 function sortBackgroundBreakpoints(breakpoints) {
-  return _toConsumableArray(breakpoints).sort(function (a, b) {
+  var _sorted$filter;
+  var orientation = getCurrentOrientation();
+  // console.log(breakpoints, orientation);
+  var sorted = _toConsumableArray(breakpoints).sort(function (a, b) {
     return b.rootWidth - a.rootWidth;
   });
+  var filtered = (_sorted$filter = sorted.filter(function (bp) {
+    return bp.orientation === orientation;
+  })) !== null && _sorted$filter !== void 0 ? _sorted$filter : sorted;
+  // console.log(filtered);
+  return filtered.length > 0 ? filtered : sorted;
+}
+
+/**
+ * Поточна орієнтація екрану. Використовується при виборі брейкпоінтів разом із діапазоном (CSS-like).
+ * @returns {'portrait'|'landscape'}
+ */
+function getCurrentOrientation() {
+  if (typeof window === 'undefined') return 'landscape';
+  if (typeof window.matchMedia === 'function') {
+    var mq = window.matchMedia('(orientation: portrait)');
+    return mq.matches ? 'portrait' : 'landscape';
+  }
+  if (window.innerWidth && window.innerHeight) {
+    return window.innerWidth < window.innerHeight ? 'portrait' : 'landscape';
+  }
+  return 'landscape';
 }
 
 /**
@@ -163,7 +203,7 @@ function sortBackgroundBreakpoints(breakpoints) {
  * По вертикалі — центр land__canvas (wrapperHeight).
  */
 function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapperEl) {
-  var _wrapperEl$offsetHeig, _sorted$find, _bp$offsetX, _bp$offsetY;
+  var _wrapperEl$offsetHeig, _bp$offsetX, _bp$offsetY;
   var _getCharSize = getCharSize(charConfig),
     charHeight = _getCharSize.height;
   var breakpoints = charConfig.breakpoints;
@@ -175,16 +215,8 @@ function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight, wrapp
       y: _y
     };
   }
-  var sorted = _toConsumableArray(breakpoints).sort(function (a, b) {
-    var _a$maxWidth2, _b$maxWidth2;
-    return ((_a$maxWidth2 = a.maxWidth) !== null && _a$maxWidth2 !== void 0 ? _a$maxWidth2 : Infinity) - ((_b$maxWidth2 = b.maxWidth) !== null && _b$maxWidth2 !== void 0 ? _b$maxWidth2 : Infinity);
-  });
-  var viewportWidth = window.innerWidth;
-  var bp = (_sorted$find = sorted.find(function (p) {
-    var _p$maxWidth;
-    return viewportWidth <= ((_p$maxWidth = p.maxWidth) !== null && _p$maxWidth !== void 0 ? _p$maxWidth : Infinity);
-  })) !== null && _sorted$find !== void 0 ? _sorted$find : sorted[sorted.length - 1];
-  var offsetX = (_bp$offsetX = bp.offsetX) !== null && _bp$offsetX !== void 0 ? _bp$offsetX : 50;
+  var bp = getMatchedBreakpoint(breakpoints);
+  var offsetX = (_bp$offsetX = bp === null || bp === void 0 ? void 0 : bp.offsetX) !== null && _bp$offsetX !== void 0 ? _bp$offsetX : 50;
   var centerY = bp.centerY !== false;
   var x = offsetX;
   var y = centerY ? Math.max(0, Math.min((wrapperHeight - charHeight) / 2, canvasHeight - charHeight)) : canvasHeight - charHeight - ((_bp$offsetY = bp.offsetY) !== null && _bp$offsetY !== void 0 ? _bp$offsetY : 0);
@@ -228,44 +260,50 @@ function getValueFromBreakpoints(breakpoints, key, fallback) {
 
 /**
  * Повертає breakpoint, що відповідає поточному viewportWidth.
+ * Підтримує опційний orientation — перевірка разом із діапазоном (CSS-like).
  */
 function getMatchedBreakpoint(breakpoints) {
-  var _sorted$find2;
+  var _ref, _sorted$find2;
   if (!(breakpoints !== null && breakpoints !== void 0 && breakpoints.length)) return null;
   var sorted = _toConsumableArray(breakpoints).sort(function (a, b) {
-    var _a$maxWidth3, _b$maxWidth3;
-    return ((_a$maxWidth3 = a.maxWidth) !== null && _a$maxWidth3 !== void 0 ? _a$maxWidth3 : Infinity) - ((_b$maxWidth3 = b.maxWidth) !== null && _b$maxWidth3 !== void 0 ? _b$maxWidth3 : Infinity);
+    var _a$maxWidth2, _b$maxWidth2;
+    return ((_a$maxWidth2 = a.maxWidth) !== null && _a$maxWidth2 !== void 0 ? _a$maxWidth2 : Infinity) - ((_b$maxWidth2 = b.maxWidth) !== null && _b$maxWidth2 !== void 0 ? _b$maxWidth2 : Infinity);
   });
   var viewportWidth = window.innerWidth;
-  return (_sorted$find2 = sorted.find(function (p) {
+  var orientation = getCurrentOrientation();
+  var matches = function matches(p) {
+    var _p$maxWidth;
+    return viewportWidth <= ((_p$maxWidth = p.maxWidth) !== null && _p$maxWidth !== void 0 ? _p$maxWidth : Infinity) && (!p.orientation || p.orientation === orientation);
+  };
+  var matchesWidthOnly = function matchesWidthOnly(p) {
     var _p$maxWidth2;
     return viewportWidth <= ((_p$maxWidth2 = p.maxWidth) !== null && _p$maxWidth2 !== void 0 ? _p$maxWidth2 : Infinity);
-  })) !== null && _sorted$find2 !== void 0 ? _sorted$find2 : sorted[sorted.length - 1];
+  };
+  return (_ref = (_sorted$find2 = sorted.find(matches)) !== null && _sorted$find2 !== void 0 ? _sorted$find2 : sorted.find(matchesWidthOnly)) !== null && _ref !== void 0 ? _ref : sorted[sorted.length - 1];
 }
 
 /**
  * Позиція коіна відносно char. Перший коін — offsetRight px вправо від char, далі в ряд з gapBetween.
  * По вертикалі — центр land__canvas.
  * Кожен item може мати gapBetweenLeft (відступ зліва) або gapBetweenRight (відступ справа) для кастомного інтервалу.
- * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
+ * Усі параметри (width, height, offsetRight, gapBetween, itemGaps) беруться з єдиного coins.breakpoints.
  */
 function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
-  var _ref, _coinsBp$width, _ref2, _coinsBp$height, _getValueFromBreakpoi, _coinsConfig$offsetRi, _gapBp$gapBetween, _coinsConfig$items, _wrapperEl$offsetHeig2;
+  var _ref2, _coinsBp$width, _ref3, _coinsBp$height, _ref4, _coinsBp$offsetRight, _coinsBp$gapBetween, _coinsConfig$items, _wrapperEl$offsetHeig2;
   var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-  var w = (_ref = (_coinsBp$width = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width !== void 0 ? _coinsBp$width : coinsConfig.width) !== null && _ref !== void 0 ? _ref : 134;
-  var h = (_ref2 = (_coinsBp$height = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height !== void 0 ? _coinsBp$height : coinsConfig.height) !== null && _ref2 !== void 0 ? _ref2 : 172;
-  var offsetRight = (_getValueFromBreakpoi = getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null)) !== null && _getValueFromBreakpoi !== void 0 ? _getValueFromBreakpoi : (_coinsConfig$offsetRi = coinsConfig.offsetRightDefault) !== null && _coinsConfig$offsetRi !== void 0 ? _coinsConfig$offsetRi : 50;
-  var gapBp = getMatchedBreakpoint(coinsConfig.gapBreakpoints);
-  var gapBetween = (_gapBp$gapBetween = gapBp === null || gapBp === void 0 ? void 0 : gapBp.gapBetween) !== null && _gapBp$gapBetween !== void 0 ? _gapBp$gapBetween : 70;
+  var w = (_ref2 = (_coinsBp$width = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width !== void 0 ? _coinsBp$width : coinsConfig.width) !== null && _ref2 !== void 0 ? _ref2 : 134;
+  var h = (_ref3 = (_coinsBp$height = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height !== void 0 ? _coinsBp$height : coinsConfig.height) !== null && _ref3 !== void 0 ? _ref3 : 172;
+  var offsetRight = (_ref4 = (_coinsBp$offsetRight = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.offsetRight) !== null && _coinsBp$offsetRight !== void 0 ? _coinsBp$offsetRight : coinsConfig.offsetRightDefault) !== null && _ref4 !== void 0 ? _ref4 : 50;
+  var gapBetween = (_coinsBp$gapBetween = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.gapBetween) !== null && _coinsBp$gapBetween !== void 0 ? _coinsBp$gapBetween : 70;
   var items = (_coinsConfig$items = coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.items) !== null && _coinsConfig$items !== void 0 ? _coinsConfig$items : [];
   var wrapperHeight = (_wrapperEl$offsetHeig2 = wrapperEl === null || wrapperEl === void 0 ? void 0 : wrapperEl.offsetHeight) !== null && _wrapperEl$offsetHeig2 !== void 0 ? _wrapperEl$offsetHeig2 : canvasHeight;
   var y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
   var leftEdge = charX + (charWidth !== null && charWidth !== void 0 ? charWidth : 225);
   for (var i = 0; i <= index; i++) {
-    var _gapBp$itemGaps, _gapBp$itemGaps2, _ref3, _itemGap$gapBetweenLe, _items$i, _ref4, _ref5, _ref6, _itemGap$gapBetweenLe2, _items$i2, _items;
-    var itemGap = gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps = gapBp.itemGaps) === null || _gapBp$itemGaps === void 0 ? void 0 : _gapBp$itemGaps[i];
-    var prevItemGap = i > 0 ? gapBp === null || gapBp === void 0 ? void 0 : (_gapBp$itemGaps2 = gapBp.itemGaps) === null || _gapBp$itemGaps2 === void 0 ? void 0 : _gapBp$itemGaps2[i - 1] : null;
-    var gap = i === 0 ? (_ref3 = (_itemGap$gapBetweenLe = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe !== void 0 ? _itemGap$gapBetweenLe : (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _ref3 !== void 0 ? _ref3 : offsetRight : (_ref4 = (_ref5 = (_ref6 = (_itemGap$gapBetweenLe2 = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe2 !== void 0 ? _itemGap$gapBetweenLe2 : (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _ref6 !== void 0 ? _ref6 : prevItemGap === null || prevItemGap === void 0 ? void 0 : prevItemGap.gapBetweenRight) !== null && _ref5 !== void 0 ? _ref5 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref4 !== void 0 ? _ref4 : gapBetween;
+    var _coinsBp$itemGaps, _coinsBp$itemGaps2, _ref5, _itemGap$gapBetweenLe, _items$i, _ref6, _ref7, _ref8, _itemGap$gapBetweenLe2, _items$i2, _items;
+    var itemGap = coinsBp === null || coinsBp === void 0 ? void 0 : (_coinsBp$itemGaps = coinsBp.itemGaps) === null || _coinsBp$itemGaps === void 0 ? void 0 : _coinsBp$itemGaps[i];
+    var prevItemGap = i > 0 ? coinsBp === null || coinsBp === void 0 ? void 0 : (_coinsBp$itemGaps2 = coinsBp.itemGaps) === null || _coinsBp$itemGaps2 === void 0 ? void 0 : _coinsBp$itemGaps2[i - 1] : null;
+    var gap = i === 0 ? (_ref5 = (_itemGap$gapBetweenLe = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe !== void 0 ? _itemGap$gapBetweenLe : (_items$i = items[i]) === null || _items$i === void 0 ? void 0 : _items$i.gapBetweenLeft) !== null && _ref5 !== void 0 ? _ref5 : offsetRight : (_ref6 = (_ref7 = (_ref8 = (_itemGap$gapBetweenLe2 = itemGap === null || itemGap === void 0 ? void 0 : itemGap.gapBetweenLeft) !== null && _itemGap$gapBetweenLe2 !== void 0 ? _itemGap$gapBetweenLe2 : (_items$i2 = items[i]) === null || _items$i2 === void 0 ? void 0 : _items$i2.gapBetweenLeft) !== null && _ref8 !== void 0 ? _ref8 : prevItemGap === null || prevItemGap === void 0 ? void 0 : prevItemGap.gapBetweenRight) !== null && _ref7 !== void 0 ? _ref7 : (_items = items[i - 1]) === null || _items === void 0 ? void 0 : _items.gapBetweenRight) !== null && _ref6 !== void 0 ? _ref6 : gapBetween;
     if (i === index) {
       return {
         x: leftEdge + gap,
@@ -295,11 +333,11 @@ function loadCoinFrames(coinsConfig) {
  * Позиція barrier над coin. barrier[i] центрується над coin[i].
  */
 function getBarrierPositionForViewport(barrierConfig, coinX, coinY, coinWidth) {
-  var _ref7, _bp$width, _ref8, _bp$height, _ref9, _bp$offsetAbove, _barrierConfig$offset;
+  var _ref9, _bp$width, _ref10, _bp$height, _ref11, _bp$offsetAbove, _barrierConfig$offset;
   var bp = getMatchedBreakpoint(barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.breakpoints);
-  var barrierWidth = (_ref7 = (_bp$width = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width !== void 0 ? _bp$width : barrierConfig.width) !== null && _ref7 !== void 0 ? _ref7 : 171;
-  var barrierHeight = (_ref8 = (_bp$height = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height !== void 0 ? _bp$height : barrierConfig.height) !== null && _ref8 !== void 0 ? _ref8 : 112;
-  var offsetAbove = (_ref9 = (_bp$offsetAbove = bp === null || bp === void 0 ? void 0 : bp.offsetAbove) !== null && _bp$offsetAbove !== void 0 ? _bp$offsetAbove : getValueFromBreakpoints(barrierConfig.offsetAboveBreakpoints, 'offsetAbove', null)) !== null && _ref9 !== void 0 ? _ref9 : (_barrierConfig$offset = barrierConfig.offsetAboveDefault) !== null && _barrierConfig$offset !== void 0 ? _barrierConfig$offset : 10;
+  var barrierWidth = (_ref9 = (_bp$width = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width !== void 0 ? _bp$width : barrierConfig.width) !== null && _ref9 !== void 0 ? _ref9 : 171;
+  var barrierHeight = (_ref10 = (_bp$height = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height !== void 0 ? _bp$height : barrierConfig.height) !== null && _ref10 !== void 0 ? _ref10 : 112;
+  var offsetAbove = (_ref11 = (_bp$offsetAbove = bp === null || bp === void 0 ? void 0 : bp.offsetAbove) !== null && _bp$offsetAbove !== void 0 ? _bp$offsetAbove : getValueFromBreakpoints(barrierConfig.offsetAboveBreakpoints, 'offsetAbove', null)) !== null && _ref11 !== void 0 ? _ref11 : (_barrierConfig$offset = barrierConfig.offsetAboveDefault) !== null && _barrierConfig$offset !== void 0 ? _barrierConfig$offset : 10;
   var x = coinX + (coinWidth - barrierWidth) / 2;
   var y = coinY - barrierHeight - offsetAbove;
   return {
@@ -326,6 +364,7 @@ function getValidFadeInCombos() {
 function loadCarVariants(carsConfig) {
   var _carsConfig$variants;
   if (!(carsConfig !== null && carsConfig !== void 0 && (_carsConfig$variants = carsConfig.variants) !== null && _carsConfig$variants !== void 0 && _carsConfig$variants.length)) return Promise.resolve([]);
+  console.log(carsConfig.variants);
   return Promise.all(carsConfig.variants.map(function (v) {
     return loadImage(v.src).then(function (img) {
       var _v$width, _v$height;
@@ -346,17 +385,17 @@ function pickRandomCarVariant(loadedVariants) {
   return loadedVariants[Math.floor(Math.random() * loadedVariants.length)];
 }
 function drawBarrier(ctx, img, barrierConfig, x, y) {
-  var _ref10, _bp$width2, _ref11, _bp$height2;
+  var _ref12, _bp$width2, _ref13, _bp$height2;
   var bp = getMatchedBreakpoint(barrierConfig === null || barrierConfig === void 0 ? void 0 : barrierConfig.breakpoints);
-  var width = (_ref10 = (_bp$width2 = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width2 !== void 0 ? _bp$width2 : barrierConfig.width) !== null && _ref10 !== void 0 ? _ref10 : 171;
-  var height = (_ref11 = (_bp$height2 = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height2 !== void 0 ? _bp$height2 : barrierConfig.height) !== null && _ref11 !== void 0 ? _ref11 : 112;
+  var width = (_ref12 = (_bp$width2 = bp === null || bp === void 0 ? void 0 : bp.width) !== null && _bp$width2 !== void 0 ? _bp$width2 : barrierConfig.width) !== null && _ref12 !== void 0 ? _ref12 : 171;
+  var height = (_ref13 = (_bp$height2 = bp === null || bp === void 0 ? void 0 : bp.height) !== null && _bp$height2 !== void 0 ? _bp$height2 : barrierConfig.height) !== null && _ref13 !== void 0 ? _ref13 : 112;
   ctx.drawImage(img, x, y, width, height);
 }
 function drawCoin(ctx, img, coinsConfig, x, y) {
-  var _ref12, _coinsBp$width2, _ref13, _coinsBp$height2;
+  var _ref14, _coinsBp$width2, _ref15, _coinsBp$height2;
   var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-  var width = (_ref12 = (_coinsBp$width2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width2 !== void 0 ? _coinsBp$width2 : coinsConfig.width) !== null && _ref12 !== void 0 ? _ref12 : 134;
-  var height = (_ref13 = (_coinsBp$height2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height2 !== void 0 ? _coinsBp$height2 : coinsConfig.height) !== null && _ref13 !== void 0 ? _ref13 : 172;
+  var width = (_ref14 = (_coinsBp$width2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width2 !== void 0 ? _coinsBp$width2 : coinsConfig.width) !== null && _ref14 !== void 0 ? _ref14 : 134;
+  var height = (_ref15 = (_coinsBp$height2 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.height) !== null && _coinsBp$height2 !== void 0 ? _coinsBp$height2 : coinsConfig.height) !== null && _ref15 !== void 0 ? _ref15 : 172;
   ctx.drawImage(img, x, y, width, height);
 }
 function drawCar(ctx, carImg, x, y, width, height) {
@@ -366,9 +405,9 @@ function getCarsBreakpoint(carsConfig) {
   return getMatchedBreakpoint(carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig.breakpoints);
 }
 function getCarsConfigValue(carsConfig, key, fallback) {
-  var _ref14, _bp$key2;
+  var _ref16, _bp$key2;
   var bp = getCarsBreakpoint(carsConfig);
-  return (_ref14 = (_bp$key2 = bp === null || bp === void 0 ? void 0 : bp[key]) !== null && _bp$key2 !== void 0 ? _bp$key2 : carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig[key]) !== null && _ref14 !== void 0 ? _ref14 : fallback;
+  return (_ref16 = (_bp$key2 = bp === null || bp === void 0 ? void 0 : bp[key]) !== null && _bp$key2 !== void 0 ? _bp$key2 : carsConfig === null || carsConfig === void 0 ? void 0 : carsConfig[key]) !== null && _ref16 !== void 0 ? _ref16 : fallback;
 }
 function getCarsSizeScale(carsConfig) {
   return getCarsConfigValue(carsConfig, 'sizeScale', 1);
@@ -481,11 +520,11 @@ function createChickenCanvasController(config, elements) {
     return promises.length ? Promise.all(promises) : Promise.resolve();
   }
   function getCoinCenterX(coinIndex) {
-    var _ref15, _coinsBp$width3;
+    var _ref17, _coinsBp$width3;
     var charSize = getCharSize(charConfig);
     var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-    var coinWidth = (_ref15 = (_coinsBp$width3 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width3 !== void 0 ? _coinsBp$width3 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref15 !== void 0 ? _ref15 : 134;
+    var coinWidth = (_ref17 = (_coinsBp$width3 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width3 !== void 0 ? _coinsBp$width3 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref17 !== void 0 ? _ref17 : 134;
     return pos.x + coinWidth / 2;
   }
   function getCoinCenterAsCharLeft(coinIndex) {
@@ -494,8 +533,8 @@ function createChickenCanvasController(config, elements) {
     return centerX - charSize.width / 2;
   }
   function baseCharXForCoins() {
-    var _x, _ref16, _initialCharPosition;
-    return (_x = (_ref16 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref16 === void 0 ? void 0 : _ref16.x) !== null && _x !== void 0 ? _x : 50;
+    var _x, _ref18, _initialCharPosition;
+    return (_x = (_ref18 = (_initialCharPosition = initialCharPosition) !== null && _initialCharPosition !== void 0 ? _initialCharPosition : charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null) === null || _ref18 === void 0 ? void 0 : _ref18.x) !== null && _x !== void 0 ? _x : 50;
   }
   function startJumpToCoin(targetIndex) {
     var _charOverridePosition, _currentPos$x, _currentPos$y;
@@ -594,11 +633,11 @@ function createChickenCanvasController(config, elements) {
     });
   }
   function getCarPositionX(coinIndex) {
-    var _ref17, _coinsBp$width4;
+    var _ref19, _coinsBp$width4;
     var charSize = getCharSize(charConfig);
     var pos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), charSize.width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-    var coinWidth = (_ref17 = (_coinsBp$width4 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width4 !== void 0 ? _coinsBp$width4 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref17 !== void 0 ? _ref17 : 134;
+    var coinWidth = (_ref19 = (_coinsBp$width4 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width4 !== void 0 ? _coinsBp$width4 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref19 !== void 0 ? _ref19 : 134;
     return pos.x + coinWidth / 2;
   }
   function getCarStartY(carHeight) {
@@ -606,10 +645,10 @@ function createChickenCanvasController(config, elements) {
     return -carHeight - offset;
   }
   function getCarFadeInTargetY(coinIndex, carHeight) {
-    var _ref18, _coinsBp$width5;
+    var _ref20, _coinsBp$width5;
     var coinPos = getCoinPositionForViewport(coinsConfig, baseCharXForCoins(), getCharSize(charConfig).width, coinIndex, lastCanvasWidth, lastCanvasHeight, wrapperEl);
     var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-    var coinWidth = (_ref18 = (_coinsBp$width5 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width5 !== void 0 ? _coinsBp$width5 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref18 !== void 0 ? _ref18 : 134;
+    var coinWidth = (_ref20 = (_coinsBp$width5 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width5 !== void 0 ? _coinsBp$width5 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref20 !== void 0 ? _ref20 : 134;
     var _getBarrierPositionFo = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, coinWidth),
       barrierY = _getBarrierPositionFo.y;
     var stopBefore = getCarsConfigValue(carsConfig, 'stopBeforeBarrier', 20);
@@ -809,14 +848,14 @@ function createChickenCanvasController(config, elements) {
     }
   }
   function drawFullFrame() {
-    var _x2, _ref19, _initialCharPosition2;
+    var _x2, _ref21, _initialCharPosition2;
     var ctx = canvasEl.getContext('2d');
     if (!ctx || !bgImage || lastCanvasWidth <= 0 || lastCanvasHeight <= 0) return;
     drawBackground(ctx, bgImage, lastBp.rootWidth, lastBp.rootHeight, lastCanvasWidth, lastCanvasHeight);
     var charSize = charConfig ? getCharSize(charConfig) : {
       width: 225};
     var charPos = charConfig ? getCharPositionForViewport(charConfig, lastCanvasWidth, lastCanvasHeight, wrapperEl) : null;
-    var baseCharX = (_x2 = (_ref19 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref19 === void 0 ? void 0 : _ref19.x) !== null && _x2 !== void 0 ? _x2 : 50;
+    var baseCharX = (_x2 = (_ref21 = (_initialCharPosition2 = initialCharPosition) !== null && _initialCharPosition2 !== void 0 ? _initialCharPosition2 : charPos) === null || _ref21 === void 0 ? void 0 : _ref21.x) !== null && _x2 !== void 0 ? _x2 : 50;
     if (coinsConfig && (coinStaticImage || coinFrameImages.length > 0)) {
       coinStates.forEach(function (coin, index) {
         var _coinStaticImage;
@@ -840,11 +879,11 @@ function createChickenCanvasController(config, elements) {
     }
     if (barrierConfig && coinsConfig && barrierFrameImages.length > 0) {
       barrierStates.forEach(function (barrier, index) {
-        var _ref20, _coinsBp$width6, _barrierConfig$static;
+        var _ref22, _coinsBp$width6, _barrierConfig$static;
         if (!barrier.visible) return;
         var coinPos = getCoinPositionForViewport(coinsConfig, baseCharX, charSize.width, index, lastCanvasWidth, lastCanvasHeight, wrapperEl);
         var coinsBp = getMatchedBreakpoint(coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.breakpoints);
-        var coinWidth = (_ref20 = (_coinsBp$width6 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width6 !== void 0 ? _coinsBp$width6 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref20 !== void 0 ? _ref20 : 134;
+        var coinWidth = (_ref22 = (_coinsBp$width6 = coinsBp === null || coinsBp === void 0 ? void 0 : coinsBp.width) !== null && _coinsBp$width6 !== void 0 ? _coinsBp$width6 : coinsConfig === null || coinsConfig === void 0 ? void 0 : coinsConfig.width) !== null && _ref22 !== void 0 ? _ref22 : 134;
         var _getBarrierPositionFo2 = getBarrierPositionForViewport(barrierConfig, coinPos.x, coinPos.y, coinWidth),
           x = _getBarrierPositionFo2.x,
           y = _getBarrierPositionFo2.y;
@@ -1153,7 +1192,7 @@ var chickenCanvasConfig = {
     initBtnDisabledClass: '_disabled',
     counterNumber: '.land__counter-number'
   },
-  /** Root sizes sorted by width descending. Switch when canvasWidth >= rootWidth + switchThreshold. */
+  /** Root sizes sorted by width descending. Switch when canvasWidth >= rootWidth + switchThreshold. Optional orientation: 'portrait' | 'landscape' — applies only in that orientation. */
   backgroundBreakpoints: [{
     rootWidth: 1470,
     rootHeight: 1220,
@@ -1166,14 +1205,67 @@ var chickenCanvasConfig = {
     rootWidth: 868,
     rootHeight: 736,
     src: './img/canvas/bg-tab.jpg'
+  },
+  //portrait
+  {
+    rootWidth: 1300,
+    rootHeight: 1000,
+    orientation: 'portrait',
+    src: './img/canvas/bg-tab.jpg'
   }, {
-    rootWidth: 536,
-    rootHeight: 455,
+    rootWidth: 700,
+    rootHeight: 1300,
+    orientation: 'portrait',
+    src: './img/canvas/bg-tab.jpg'
+  }, {
+    rootWidth: 670,
+    rootHeight: 1000,
+    orientation: 'portrait',
     src: './img/canvas/bg-mob.jpg'
   }],
   switchThreshold: 50,
-  /** Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies. isWrapperFill: true — розмір з wrapper (.land__canvas). */
+  /**
+   * Canvas size by breakpoint. Sorted by maxWidth ascending; first where viewportWidth <= maxWidth applies.
+   * isWrapperFill: true — розмір з wrapper (.land__canvas).
+   * orientation?: 'portrait' | 'landscape' — опційно, breakpoint тільки для відповідної орієнтації.
+   */
   canvasBreakpoints: [{
+    maxWidth: 1300,
+    width: 1350,
+    height: 2000,
+    orientation: 'portrait'
+  }, {
+    maxWidth: 1150,
+    width: 1150,
+    height: 1500,
+    orientation: 'portrait',
+    src: './img/canvas/bg-tab.jpg'
+  }, {
+    maxWidth: 950,
+    width: 950,
+    height: 1300,
+    orientation: 'portrait'
+  }, {
+    maxWidth: 850,
+    width: 860,
+    height: 900,
+    orientation: 'portrait'
+  }, {
+    maxWidth: 670,
+    width: 670,
+    height: 800,
+    orientation: 'portrait'
+  }, {
+    maxWidth: 500,
+    width: 536,
+    height: 910,
+    orientation: 'portrait'
+  }, {
+    maxWidth: 374,
+    width: 410,
+    height: 820,
+    orientation: 'portrait'
+  }, {
     maxWidth: 1500,
     width: 950,
     height: 1155
@@ -1195,8 +1287,24 @@ var chickenCanvasConfig = {
     /** viewportWidth <= maxWidth. Зміни розміру тільки через sizeBreakpoints. */
     sizeBreakpoints: [{
       maxWidth: 1500,
+      width: 225,
+      height: 322,
+      orientation: 'portrait'
+    }, {
+      maxWidth: 1500,
       width: 169,
-      height: 242
+      height: 242,
+      orientation: 'landscape'
+    }, {
+      maxWidth: 950,
+      width: 140,
+      height: 201,
+      orientation: 'portrait'
+    }, {
+      maxWidth: 670,
+      width: 100,
+      height: 143,
+      orientation: 'portrait'
     }, {
       maxWidth: Infinity,
       width: 225,
@@ -1207,6 +1315,12 @@ var chickenCanvasConfig = {
     frames: ['./img/canvas/char/frame-1.png', './img/canvas/char/frame-2.png', './img/canvas/char/frame-3.png', './img/canvas/char/frame-4.png', './img/canvas/char/frame-5.png', './img/canvas/char/frame-6.png', './img/canvas/char/frame-7.png', './img/canvas/char/frame-8.png', './img/canvas/char/frame-9.png', './img/canvas/char/frame-10.png'],
     /** viewportWidth <= maxWidth. default: offsetX 50, centerY true */
     breakpoints: [{
+      maxWidth: 374,
+      offsetX: 20
+    }, {
+      maxWidth: 500,
+      offsetX: 50
+    }, {
       maxWidth: 1750,
       offsetX: 70
     }, {
@@ -1219,31 +1333,13 @@ var chickenCanvasConfig = {
     defaultState: 'static',
     width: 134,
     height: 172,
+    /** Усі параметри коінів за діапазоном: width, height, offsetRight, gapBetween, itemGaps. orientation опційно. */
     breakpoints: [{
       maxWidth: 1500,
       width: 101,
-      height: 129
-    }, {
-      maxWidth: Infinity
-    }],
-    imagePath: './img/canvas/coin',
-    staticFrame: './img/canvas/coin/static.png',
-    frames: ['./img/canvas/coin/frame-1.png', './img/canvas/coin/frame-2.png'],
-    /** Перший коін: offsetRight px вправо від char. offsetRightDefault — fallback коли breakpoints не підходять */
-    offsetRightDefault: 70,
-    offsetRightBreakpoints: [{
-      maxWidth: 1500,
-      offsetRight: 0
-    }, {
-      maxWidth: 1800,
-      offsetRight: 20
-    }, {
-      maxWidth: Infinity,
-      offsetRight: 40
-    }],
-    /** Відстань між коінами (px). viewportWidth <= maxWidth. itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } */
-    gapBreakpoints: [{
-      maxWidth: 1500,
+      height: 129,
+      orientation: 'landscape',
+      offsetRight: 0,
       gapBetween: 35,
       itemGaps: {
         2: {
@@ -1251,7 +1347,92 @@ var chickenCanvasConfig = {
         }
       }
     }, {
+      maxWidth: 1300,
+      width: 134,
+      height: 172,
+      orientation: 'portrait',
+      offsetRight: 50,
+      gapBetween: 55,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 70
+        }
+      }
+    }, {
+      maxWidth: 1150,
+      width: 134,
+      height: 172,
+      orientation: 'portrait',
+      offsetRight: 10,
+      gapBetween: 30,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 20
+        }
+      }
+    }, {
+      maxWidth: 950,
+      width: 80,
+      height: 100,
+      orientation: 'portrait',
+      offsetRight: 40,
+      gapBetween: 60,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 50
+        }
+      }
+    }, {
+      maxWidth: 850,
+      width: 80,
+      height: 100,
+      orientation: 'portrait',
+      offsetRight: 10,
+      gapBetween: 40,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 50
+        }
+      }
+    }, {
+      maxWidth: 670,
+      width: 70,
+      height: 85,
+      orientation: 'portrait',
+      offsetRight: -10,
+      gapBetween: 30,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 24
+        }
+      }
+    }, {
+      maxWidth: 500,
+      width: 54,
+      height: 69,
+      orientation: 'portrait',
+      offsetRight: -10,
+      gapBetween: 20,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 24
+        }
+      }
+    }, {
+      maxWidth: 374,
+      width: 40,
+      height: 50,
+      orientation: 'portrait',
+      offsetRight: -15,
+      gapBetween: 20,
+      itemGaps: {
+        2: {
+          gapBetweenLeft: 20
+        }
+      }
+    }, {
       maxWidth: 1800,
+      offsetRight: 20,
       gapBetween: 30,
       itemGaps: {
         2: {
@@ -1260,13 +1441,17 @@ var chickenCanvasConfig = {
       }
     }, {
       maxWidth: Infinity,
+      offsetRight: 30,
       gapBetween: 70,
       itemGaps: {
         2: {
-          gapBetweenLeft: 50
+          gapBetweenLeft: 60
         }
       }
     }],
+    imagePath: './img/canvas/coin',
+    staticFrame: './img/canvas/coin/static.png',
+    frames: ['./img/canvas/coin/frame-1.png', './img/canvas/coin/frame-2.png'],
     /** Затримка між кадрами fade-out (ms) */
     fadeFrameDelay: 120,
     /** items: { id } + опційно gapBetweenLeft (відступ зліва), gapBetweenRight (відступ справа) — fallback якщо нема в itemGaps */
@@ -1289,6 +1474,26 @@ var chickenCanvasConfig = {
       maxWidth: 1500,
       width: 128,
       height: 84,
+      offsetAbove: 8
+    }, {
+      maxWidth: 950,
+      width: 112,
+      height: 74,
+      offsetAbove: 8
+    }, {
+      maxWidth: 670,
+      width: 96,
+      height: 64,
+      offsetAbove: 8
+    }, {
+      maxWidth: 500,
+      width: 80,
+      height: 56,
+      offsetAbove: 8
+    }, {
+      maxWidth: 374,
+      width: 64,
+      height: 48,
       offsetAbove: 8
     }, {
       maxWidth: Infinity
@@ -1334,6 +1539,26 @@ var chickenCanvasConfig = {
       sizeScale: 0.75,
       offsetAboveCanvas: 15,
       stopBeforeBarrier: 15
+    }, {
+      maxWidth: 950,
+      sizeScale: 0.65,
+      offsetAboveCanvas: 15,
+      stopBeforeBarrier: 0
+    }, {
+      maxWidth: 670,
+      sizeScale: 0.55,
+      offsetAboveCanvas: 15,
+      stopBeforeBarrier: 0
+    }, {
+      maxWidth: 500,
+      sizeScale: 0.45,
+      offsetAboveCanvas: 15,
+      stopBeforeBarrier: 0
+    }, {
+      maxWidth: 374,
+      sizeScale: 0.35,
+      offsetAboveCanvas: 15,
+      stopBeforeBarrier: 0
     }, {
       maxWidth: Infinity,
       sizeScale: 1

@@ -5,21 +5,28 @@
 
 /**
  * Розміри canvas з брейкпоінтів. Якщо bp.isWrapperFill === true — width/height з wrapperEl.
+ * Орієнтація застосовується разом із діапазоном maxWidth (CSS-like: (max-width: X) and (orientation: portrait)).
  */
 export function getCanvasDimensionsFromBreakpoints(sizeBreakpoints, wrapperEl) {
-  const sorted = [...(sizeBreakpoints || [])].sort(
+  const points = sizeBreakpoints || [];
+  const sorted = [...points].sort(
     (a, b) => (a.maxWidth ?? Infinity) - (b.maxWidth ?? Infinity)
   );
   const viewportWidth = window.innerWidth;
-  for (let i = 0; i < sorted.length; i++) {
-    const bp = sorted[i];
-    if (viewportWidth <= (bp.maxWidth ?? Infinity)) {
-      if (bp.isWrapperFill && wrapperEl) {
-        return { width: wrapperEl.offsetWidth || bp.width, height: wrapperEl.offsetHeight || bp.height };
-      }
-      return { width: bp.width, height: bp.height };
+  const orientation = getCurrentOrientation();
+
+  const matches = (bp) =>
+    viewportWidth <= (bp.maxWidth ?? Infinity) && (!bp.orientation || bp.orientation === orientation);
+  const matchesWidthOnly = (bp) => viewportWidth <= (bp.maxWidth ?? Infinity);
+
+  let bp = sorted.find(matches) ?? sorted.find(matchesWidthOnly);
+  if (bp) {
+    if (bp.isWrapperFill && wrapperEl) {
+      return { width: wrapperEl.offsetWidth || bp.width, height: wrapperEl.offsetHeight || bp.height };
     }
+    return { width: bp.width, height: bp.height };
   }
+
   const last = sorted[sorted.length - 1];
   if (last?.isWrapperFill && wrapperEl) {
     return { width: wrapperEl.offsetWidth || last.width, height: wrapperEl.offsetHeight || last.height };
@@ -28,13 +35,22 @@ export function getCanvasDimensionsFromBreakpoints(sizeBreakpoints, wrapperEl) {
 }
 
 export function getBackgroundBreakpointForWidth(bgBreakpoints, canvasWidth, switchThreshold = 50) {
-  for (let i = 0; i < bgBreakpoints.length; i++) {
-    const bp = bgBreakpoints[i];
-    if (canvasWidth >= bp.rootWidth + switchThreshold) {
-      return bp;
-    }
+  const orientation = getCurrentOrientation();
+  const matches = (bp) => {
+
+    return canvasWidth >= bp.rootWidth + switchThreshold && (!bp.orientation || bp.orientation === orientation)
   }
-  return bgBreakpoints[bgBreakpoints.length - 1];
+  const matchesWidthOnly = (bp) => canvasWidth >= bp.rootWidth + switchThreshold;
+
+  console.log(matches)
+
+  
+  // console.log(bgBreakpoints.find(matches), orientation);
+
+  const bp = bgBreakpoints.find(matches) ?? bgBreakpoints.find(matchesWidthOnly);
+
+
+  return bp ?? bgBreakpoints[bgBreakpoints.length - 1];
 }
 
 export function loadImage(src) {
@@ -59,7 +75,45 @@ export function drawBackground(ctx, img, rootWidth, rootHeight, canvasWidth, can
 }
 
 export function sortBackgroundBreakpoints(breakpoints) {
-  return [...breakpoints].sort((a, b) => b.rootWidth - a.rootWidth);
+  const orientation = getCurrentOrientation();
+  // console.log(breakpoints, orientation);
+  const sorted = [...breakpoints].sort((a, b) => b.rootWidth - a.rootWidth);
+  const filtered = sorted.filter((bp) => bp.orientation === orientation) ?? sorted;
+  // console.log(filtered);
+  return filtered.length > 0 ? filtered : sorted;
+}
+
+/**
+ * Поточна орієнтація екрану. Використовується при виборі брейкпоінтів разом із діапазоном (CSS-like).
+ * @returns {'portrait'|'landscape'}
+ */
+export function getCurrentOrientation() {
+  if (typeof window === 'undefined') return 'landscape';
+  if (typeof window.matchMedia === 'function') {
+    const mq = window.matchMedia('(orientation: portrait)');
+    return mq.matches ? 'portrait' : 'landscape';
+  }
+  if (window.innerWidth && window.innerHeight) {
+    return window.innerWidth < window.innerHeight ? 'portrait' : 'landscape';
+  }
+  return 'landscape';
+}
+
+/**
+ * Returns breakpoints that match current orientation.
+ * bp.orientation: 'portrait' | 'landscape' | undefined (any).
+ * @deprecated Вибір брейкпоінтів тепер робиться через умову "діапазон + орієнтація" у getMatchedBreakpoint / getCanvasDimensionsFromBreakpoints / getBackgroundBreakpointForWidth.
+ */
+export function filterBreakpointsByOrientation(breakpoints) {
+  if (!breakpoints?.length) return breakpoints || [];
+  const orientation = getCurrentOrientation();
+  const filtered = breakpoints.filter((bp) => !bp.orientation || bp.orientation === orientation);
+  return filtered.length > 0 ? filtered : breakpoints;
+}
+
+/** Thin wrapper for backwards compatibility with background breakpoints. */
+export function filterBackgroundBreakpointsByOrientation(breakpoints) {
+  return filterBreakpointsByOrientation(breakpoints);
 }
 
 /**
@@ -75,12 +129,8 @@ export function getCharPositionForViewport(charConfig, canvasWidth, canvasHeight
     const y = Math.max(0, Math.min((wrapperHeight - charHeight) / 2, canvasHeight - charHeight));
     return { x: 50, y };
   }
-  const sorted = [...breakpoints].sort(
-    (a, b) => (a.maxWidth ?? Infinity) - (b.maxWidth ?? Infinity)
-  );
-  const viewportWidth = window.innerWidth;
-  const bp = sorted.find((p) => viewportWidth <= (p.maxWidth ?? Infinity)) ?? sorted[sorted.length - 1];
-  const offsetX = bp.offsetX ?? 50;
+  const bp = getMatchedBreakpoint(breakpoints);
+  const offsetX = bp?.offsetX ?? 50;
   const centerY = bp.centerY !== false;
   const x = offsetX;
   const y = centerY
@@ -118,6 +168,7 @@ export function getValueFromBreakpoints(breakpoints, key, fallback) {
 
 /**
  * Повертає breakpoint, що відповідає поточному viewportWidth.
+ * Підтримує опційний orientation — перевірка разом із діапазоном (CSS-like).
  */
 export function getMatchedBreakpoint(breakpoints) {
   if (!breakpoints?.length) return null;
@@ -125,32 +176,34 @@ export function getMatchedBreakpoint(breakpoints) {
     (a, b) => (a.maxWidth ?? Infinity) - (b.maxWidth ?? Infinity)
   );
   const viewportWidth = window.innerWidth;
-  return sorted.find((p) => viewportWidth <= (p.maxWidth ?? Infinity)) ?? sorted[sorted.length - 1];
+  const orientation = getCurrentOrientation();
+  const matches = (p) =>
+    viewportWidth <= (p.maxWidth ?? Infinity) && (!p.orientation || p.orientation === orientation);
+  const matchesWidthOnly = (p) => viewportWidth <= (p.maxWidth ?? Infinity);
+
+  return sorted.find(matches) ?? sorted.find(matchesWidthOnly) ?? sorted[sorted.length - 1];
 }
 
 /**
  * Позиція коіна відносно char. Перший коін — offsetRight px вправо від char, далі в ряд з gapBetween.
  * По вертикалі — центр land__canvas.
  * Кожен item може мати gapBetweenLeft (відступ зліва) або gapBetweenRight (відступ справа) для кастомного інтервалу.
- * У gapBreakpoints можна передати itemGaps: { index: { gapBetweenLeft, gapBetweenRight } } для перевизначення по брейкпоінтах.
+ * Усі параметри (width, height, offsetRight, gapBetween, itemGaps) беруться з єдиного coins.breakpoints.
  */
 export function getCoinPositionForViewport(coinsConfig, charX, charWidth, index, canvasWidth, canvasHeight, wrapperEl) {
   const coinsBp = getMatchedBreakpoint(coinsConfig?.breakpoints);
   const w = coinsBp?.width ?? coinsConfig.width ?? 134;
   const h = coinsBp?.height ?? coinsConfig.height ?? 172;
-  const offsetRight =
-    getValueFromBreakpoints(coinsConfig.offsetRightBreakpoints, 'offsetRight', null) ??
-    (coinsConfig.offsetRightDefault ?? 50);
-  const gapBp = getMatchedBreakpoint(coinsConfig.gapBreakpoints);
-  const gapBetween = gapBp?.gapBetween ?? 70;
+  const offsetRight = coinsBp?.offsetRight ?? coinsConfig.offsetRightDefault ?? 50;
+  const gapBetween = coinsBp?.gapBetween ?? 70;
   const items = coinsConfig?.items ?? [];
   const wrapperHeight = wrapperEl?.offsetHeight ?? canvasHeight;
   const y = Math.max(0, Math.min((wrapperHeight - h) / 2, canvasHeight - h));
 
   let leftEdge = charX + (charWidth ?? 225);
   for (let i = 0; i <= index; i++) {
-    const itemGap = gapBp?.itemGaps?.[i];
-    const prevItemGap = i > 0 ? gapBp?.itemGaps?.[i - 1] : null;
+    const itemGap = coinsBp?.itemGaps?.[i];
+    const prevItemGap = i > 0 ? coinsBp?.itemGaps?.[i - 1] : null;
     const gap =
       i === 0
         ? (itemGap?.gapBetweenLeft ?? items[i]?.gapBetweenLeft ?? offsetRight)
@@ -203,6 +256,8 @@ export function getValidFadeInCombos() {
 
 export function loadCarVariants(carsConfig) {
   if (!carsConfig?.variants?.length) return Promise.resolve([]);
+
+  console.log(carsConfig.variants);
   return Promise.all(
     carsConfig.variants.map((v) =>
       loadImage(v.src)
@@ -273,6 +328,8 @@ export function createChickenCanvasController(config, elements) {
 
   const bgBreakpoints = sortBackgroundBreakpoints(backgroundBreakpoints);
 
+
+  
   let charOverridePosition = null;
   let initialCharPosition = null;
   let chainActive = false;

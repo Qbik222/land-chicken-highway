@@ -1,6 +1,52 @@
 @import './pages/vars'
 @import './pages/mixins'
 
++breakpoint($min-width: 2500px)
+  .land
+
+    &__btn
+      transform: scale(1.5)
+      transform-origin: left top
+    &__left
+      min-width: 880px
+    &__canvas
+      canvas
+        transform: scale(1.5)
+        transform-origin: left center
+      &-btn
+        left: 830px
+        width: 480px
+        height: 345px
+        font-size: 50px
+    &__title
+      &-item
+        font-size: 92px
+        line-height: 92px
+    &__subtitle
+      font-size: 92px
+      line-height: 92px
+    &__counter
+      &-number
+        font-size: 50px
+        line-height: 50px
+
++breakpoint($min-width: 2000px)
+  .land
+    &__canvas
+      canvas
+        transform: scale(1.28)
+        transform-origin: left center
+      &-btn
+        left: 720px
+        width: 380px
+        height: 275px
+        font-size: 40px
+    &__logo
+      max-width: 350px
+  .license
+    transform: scale(1.5)
+    transform-origin: left bottom
+
 +breakpoint($max-width: 1700px)
   .land
     &__left
@@ -91,3 +137,158 @@
       canvas
         transform: scale(.85)
         transform-origin: left top
+
++breakpoint($max-width: 1300px, $orientation: portrait)
+  .land
+    flex-direction: column
+    &__left
+      position: static
+      width: 100%
+      max-width: 100%
+      min-width: auto
+      display: grid
+      grid-template-columns: repeat(2, auto)
+      grid-template-rows: repeat(3, auto)
+      gap: 8px
+      padding: 24px 32px
+      justify-content: space-between
+      margin-bottom: -100px
+      & > *
+        margin: 0
+      &::before
+        content: none
+    &__title
+      flex-direction: row
+      align-items: center
+      justify-content: flex-start
+      grid-column-start: 1
+      align-self: flex-start
+    &__subtitle
+      grid-column-start: 1
+      align-self: flex-end
+      width: fit-content
+    &__logo
+      grid-column-start: 1
+      margin-bottom: 50px
+    &__btn
+      grid-column-start: 2
+      grid-row-start: 1
+      width: fit-content
+      justify-self: end
+    &__counter
+      grid-column-start: 2
+      flex-direction: column
+      align-items: flex-end
+      justify-content: center
+      gap: 16px
+    &__canvas
+      &::before
+        content: ""
+        width: 110%
+        height: 300px
+        position: absolute
+        z-index: 1
+        pointer-events: none
+        bottom: -2px
+        left: 50%
+        transform: translateX(-50%)
+        background: linear-gradient(0deg, #1A1A23 30%, rgba(26, 26, 35, 0) 100%)
+      &::after
+        content: ""
+        width: 110%
+        height: 150px
+        position: absolute
+        z-index: 1
+        pointer-events: none
+        top: -2px
+        left: 50%
+        transform: translateX(-50%)
+        background: linear-gradient(180deg, #1A1A23 10%, rgba(26, 26, 35, 0) 100%)
+      canvas
+        left: 50%
+        transform: translateX(-50%)
+      &-btn
+        transform: translateX(-50%)
+        width: 230px
+        height: 160px
+        bottom: 100px
+        left: 52%
+        font-size: 24px
+  .license
+    position: absolute
+    bottom: 20px
+    left: 50%
+    transform: translateX(-50%)
+    gap: 12px
+    min-width: 345px
+
++breakpoint($max-width: 1050px, $orientation: portrait)
+  .land
+    &__logo
+      max-width: 165px
+      margin-bottom: 0px
+    &__title
+      position: relative
+      top: 15px
+      &-item
+        font-size: 36px
+        line-height: 36px
+    &__subtitle
+      font-size: 36px
+      line-height: 36px
+      padding: 15px 20px
+      border-radius: 8px
+    &__counter
+      &-number
+        font-size: 24px
+        line-height: 24px
+        &::before
+          width: 38px
+          height: 38px
+      &-text
+        font-size: 18px
++breakpoint($max-width: 600px, $orientation: portrait)
+  .land
+    &__left
+      padding: 14px 24px
+    &__canvas
+      &-btn
+        width: 170px
+        height: 120px
+        font-size: 18px
+    &__logo
+      max-width: 105px
+    &__title
+      grid-column: span 2 / span 2
+      top: 0
+      margin-top: 30px
+      justify-content: center
+      &-item
+        font-size: 26px
+        line-height: 26px
+ 
+    &__subtitle
+      grid-column: span 2 / span 2
+      font-size: 26px
+      line-height: 26px
+      justify-content: center
+      align-items: center
+      margin: 10px auto 0 auto
+      padding: 9px 25px
+    &__counter
+      grid-column: span 2 / span 2
+      align-items: center
+      justify-content: center
+      flex-direction: row
+      gap: 12px
+      margin-top: 10px
+      &-text
+        margin-left: 0
+    .btn
+      font-size: 14px
+      padding: 8px 16px
+
++breakpoint($max-width: 374px)
+  .license
+    min-width: 300px
+        

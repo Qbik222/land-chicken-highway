@@ -4,7 +4,7 @@
 
 ## Chicken Canvas — стани елементів і флоу
 
-Canvas-анімація з персонажем (char), монетами (coins), бар'єрами (barriers) та машинами (cars). Логіка в `chicken-canvas.js`, `chicken-canvas-utils.js`. Конфіг — `animations.config.js`. Умови роботи — `front/canvas-flow.md`.
+Canvas-анімація з персонажем (char), монетами (coins), бар'єрами (barriers) та машинами (cars). Логіка в `chicken-canvas.js`, `chicken-canvas-utils.js`. Конфіг — `animations.config.js`. Умови роботи — `front/canvas-flow.md`. Детальний опис полів конфігу — нижче в розділі «Конфіг анімацій».
 
 ### Порядок малювання
 
@@ -133,6 +133,172 @@ runCarFadeInLoop: fade-in машина доїхала до targetY
 | `setCharState(state)` | Встановити char: 'stay' | 'jumping'.                              |
 | `setCoinFadeOut(i)`   | Запустити fade-out для coin[i].                                      |
 | `startAnimationChain()`| Запустити ланцюг стрибків char по коінах.                           |
+
+---
+
+## Конфіг анімацій (animations.config.js)
+
+**Файл:** `front/js/animations/config/animations.config.js`
+
+**Експорти:** `chickenCanvasConfig` (передається в `initChickenCanvas` з [main.js](front/js/main.js)), `textAnimationConfig` (використовується в [utils.js](front/js/utils.js) для текстової анімації).
+
+### chickenCanvasConfig — детальний опис полів
+
+#### selectors
+
+Селектори DOM-елементів для канвасу та кнопки запуску.
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `wrapper` | `string` | Контейнер канвасу (наприклад `.land__canvas`). Використовується для отримання розмірів при `isWrapperFill: true` і для розміщення canvas. |
+| `landLeft` | `string` | Блок лівої колонки (текст, кнопка). Може використовуватись для розміток або скролу. |
+| `canvas` | `string` | Елемент `<canvas>` (наприклад `[data-canvas="chicken"]`). На ньому малюється фон, коіни, машини, бар'єри, char. |
+| `initBtn` | `string` | Кнопка запуску анімації (наприклад `[data-canvas-init="chicken"]`). Клік викликає `handleInitClick`. |
+| `initBtnDisabledClass` | `string` | CSS-клас стану «вимкнено» для кнопки (наприклад `_disabled`). Додається після старту ланцюга, знімається при `recalcAndRestart`. |
+| `counterNumber` | `string` | Елемент, у якому показується лічильник зібраних монет у форматі «N / total» (наприклад `.land__counter-number`). |
+
+#### backgroundBreakpoints
+
+Вибір фонового зображення за шириною канвасу та опційно орієнтацією екрану.
+
+| Поле в елементі | Тип | Призначення |
+|-----------------|-----|-------------|
+| `rootWidth` | `number` | Поріг ширини канвасу (px). Breakpoints сортуються за `rootWidth` за спаданням. Вибір: перший елемент, для якого `canvasWidth >= rootWidth + switchThreshold`. |
+| `rootHeight` | `number` | Опорна висота (px); може використовуватись для пропорцій або майбутньої логіки. |
+| `src` | `string` | Шлях до зображення фону (наприклад `./img/canvas/bg.jpg`). |
+| `orientation` | `'portrait' \| 'landscape'` | Опційно. Якщо вказано — цей breakpoint застосовується тільки при відповідній орієнтації екрану (`matchMedia('(orientation: portrait)')`). |
+
+Перед вибором breakpoint масив фільтрується по `orientation`; якщо після фільтрації нічого не залишилось — використовується повний масив.
+
+#### switchThreshold
+
+| Тип | Призначення |
+|-----|-------------|
+| `number` | Поріг у пікселях для перемикання фону. Умова переключення: `canvasWidth >= rootWidth + switchThreshold`. Типово 50. |
+
+#### canvasBreakpoints
+
+Розмір canvas за шириною viewport. Масив сортований за `maxWidth` по зростанню; застосовується перший елемент, де `viewportWidth <= maxWidth`.
+
+| Поле в елементі | Тип | Призначення |
+|-----------------|-----|-------------|
+| `maxWidth` | `number` | Максимальна ширина viewport (px), при якій діє цей breakpoint. Може бути `Infinity` для «все решта». |
+| `width` | `number` | Ширина canvas у пікселях. |
+| `height` | `number` | Висота canvas у пікселях. |
+| `isWrapperFill` | `boolean` | Опційно. Якщо `true` — ширина і висота canvas беруться з розмірів елемента `wrapper` (`.land__canvas`), а не з `width`/`height`. |
+| `orientation` | `'portrait' \| 'landscape'` | Опційно. Якщо вказано — breakpoint застосовується тільки при відповідній орієнтації екрану. |
+
+Алгоритм вибору: спочатку масив `canvasBreakpoints` фільтрується за `orientation` (якщо є такі поля), потім із відфільтрованих елементів обирається перший, де `viewportWidth <= maxWidth`. Якщо після фільтрації нічого не залишилось — використовується початковий масив без фільтрації за орієнтацією.
+
+---
+
+#### char (персонаж)
+
+Конфіг персонажа: стани `stay` | `jumping`, розміри та позиція по breakpoints.
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `defaultState` | `'stay' \| 'jumping'` | Початковий стан при ініціалізації та після `recalcAndRestart`. |
+| `width` | `number` | Базова ширина персонажа (px); фактичні розміри беруться з `sizeBreakpoints`. |
+| `height` | `number` | Базова висота (px); так само перевизначається через `sizeBreakpoints`. |
+| `sizeBreakpoints` | `Array<{ maxWidth, width, height }>` | Розміри char по viewport. Перший елемент, де `viewportWidth <= maxWidth`. Без breakpoint використовуються базові `width`/`height`. |
+| `jumpFrameDelay` | `number` | Затримка (ms) між кадрами анімації під час стрибка (`jumping`). |
+| `frames` | `string[]` | Масив шляхів до кадрів (PNG). Індекс 0 — stay; 1…N — цикл jumping. |
+| `breakpoints` | `Array<{ maxWidth, offsetX?, centerY? }>` | Позиція char по горизонталі. `offsetX` — відступ від лівого краю canvas (px). `centerY` (опційно) — центрування по вертикалі. |
+
+---
+
+#### coins (монети)
+
+Конфіг монет у ряд праворуч від char. Стани: `static` (видима) → `fade-out` (анімація зникнення) → прихована.
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `defaultState` | `string` | Початковий стан кожної монети (наприклад `'static'`). |
+| `width` | `number` | Базова ширина монети (px). Перевизначається через `breakpoints` (sizeBreakpoints). |
+| `height` | `number` | Базова висота (px). |
+| `breakpoints` | `Array<{ maxWidth, orientation?, width?, height?, offsetRight?, gapBetween?, itemGaps? }>` | Єдиний масив брейкпоінтів: розміри, відступ від char (`offsetRight`), проміжки між монетами (`gapBetween`), кастомні проміжки (`itemGaps: { [index]: { gapBetweenLeft?, gapBetweenRight? } }`). Перший де `viewportWidth <= maxWidth` і `orientation` збігається (CSS-like). |
+| `imagePath` | `string` | Базова папка з зображеннями монет. |
+| `staticFrame` | `string` | Шлях до кадру статичної монети (до початку fade-out). |
+| `frames` | `string[]` | Шляхи кадрів анімації fade-out (зникнення). |
+| `offsetRightDefault` | `number` | Відстань (px) від правого краю char до першої монети — fallback якщо `offsetRight` не вказано в жодному breakpoint. |
+| `fadeFrameDelay` | `number` | Затримка (ms) між кадрами анімації fade-out. |
+| `items` | `Array<{ id, gapBetweenLeft?, gapBetweenRight? }>` | Список монет: `id` — індекс; опційно `gapBetweenLeft`/`gapBetweenRight` як fallback, якщо нема в `itemGaps`. |
+
+---
+
+#### barrier (бар'єри)
+
+Бар'єр над кожною монетою. Стани: `hide` → `fade-in` → `static`.
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `defaultState` | `string` | Початковий стан (наприклад `'hide'`). |
+| `width` | `number` | Базова ширина бар'єра (px). Перевизначається в `breakpoints`. |
+| `height` | `number` | Базова висота (px). |
+| `breakpoints` | `Array<{ maxWidth, width?, height?, offsetAbove? }>` | Розміри та опційно `offsetAbove` по viewport. |
+| `imagePath` | `string` | Папка з кадрами бар'єра. |
+| `frames` | `string[]` | Шляхи кадрів анімації fade-in (з'явлення). |
+| `staticFrameIndex` | `number` | Індекс кадру після fade-in (статичний вигляд бар'єра). |
+| `offsetAboveDefault` | `number` | Відстань (px) від верхнього краю монети до бар'єра, якщо не задано в breakpoints. |
+| `offsetAboveBreakpoints` | `Array<{ maxWidth, offsetAbove }>` | Відстань «над монетою» по viewport (px). |
+| `fadeInFrameDelay` | `number` | Затримка (ms) між кадрами fade-in. |
+| `items` | `Array<{ id }>` | Список бар'єрів (один бар'єр на монету за індексом `id`). |
+
+---
+
+#### cars (машини)
+
+Машини двох типів: running (їдуть зверху вниз) і fade-in (з'являються після збору монети і їдуть до бар'єра).
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `variants` | `Array<{ width, height, src }>` | Варіанти зовнішнього вигляду: розміри (px) та шлях до зображення. При спавні вибирається випадковий варіант. |
+| `breakpoints` | `Array<{ maxWidth, sizeScale?, offsetAboveCanvas?, stopBeforeBarrier? }>` | По viewport: `sizeScale` — множник розміру (наприклад 0.75 для зменшення на 25%); `offsetAboveCanvas` — відступ від верхнього краю canvas; `stopBeforeBarrier` — відстань (px) до бар'єра, на якій машина зупиняється у стані fade-in. |
+| `offsetAboveCanvas` | `number` | Дефолтний відступ від верху canvas (px), якщо не перевизначено в breakpoints. |
+| `runningIntervalMin` | `number` | Мінімальний інтервал (с) між запусками running-машин на одному слоті. |
+| `runningIntervalMax` | `number` | Максимальний інтервал (с) між запусками running-машин. |
+| `runningSpeed` | `number` | Швидкість руху running-машини (px за одиницю часу). |
+| `minStartGap` | `number` | Мінімальний проміжок (в одиницях логіки) між стартами running на одному слоті. |
+| `maxConcurrent` | `number` | Максимальна кількість одночасно їдучих running-машин на всьому канвасі. |
+| `stopBeforeBarrier` | `number` | Дефолтна відстань (px) до бар'єра для зупинки fade-in машини. |
+| `fadeInSpeed` | `number` | Швидкість руху fade-in машини (px за одиницю часу). |
+| `runningSpeedMultiplierDuringJump` | `number` | Множник швидкості running-машин під час стрибка char (прискорення). |
+
+---
+
+#### animationChain (ланцюг стрибків)
+
+Параметри руху char по дузі та таймінги ланцюга.
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `jumpArcHeight` | `number` | Висота дуги стрибка (px) — максимальне підняття над лінією старт–фініш. |
+| `jumpDuration` | `number` | Тривалість одного стрибка (ms). |
+| `betweenJumpsDelay` | `number` | Затримка (ms) між приземленням на коін і стартом стрибка до наступного коіна. |
+| `popupOpenDelayAfterLastJump` | `number` | Затримка (ms) після приземлення на останній коін до виклику `onChainComplete` (скрол, overflow, показ попапу). |
+
+Опційно в коді (наприклад у main.js) до ланцюга підписується `onChainComplete` — callback без аргументів, викликається після затримки `popupOpenDelayAfterLastJump` після останнього стрибка.
+
+#### override
+
+| Тип | Призначення |
+|-----|-------------|
+| `object \| null` | Для тестів: якщо задано, може підставляти кастомні breakpoints або root для примусового вибору фону. У продакшені зазвичай `null`. |
+
+---
+
+Деталі позиціонування та умов роботи — у [front/canvas-flow.md](front/canvas-flow.md).
+
+### textAnimationConfig — детальний опис полів
+
+Текстова анімація (показ блоків тексту по черзі).
+
+| Поле | Тип | Призначення |
+|------|-----|-------------|
+| `wrapOrder` | `string[]` | Масив селекторів DOM-елементів у порядку показу (наприклад `['.land__text-item._first', '.land__text-item._second', '.land__text-item._third']`). |
+| `beforeShowBottomDelay` | `number` | Затримка (ms) перед показом нижнього (наступного) елемента. |
+| `showDuration` | `number` | Тривалість (ms) анімації показу елемента. |
 
 ---
 
